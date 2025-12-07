@@ -770,6 +770,10 @@ def create_video_content(campaign):
             st.info("AI ভিডিও জেনারেট হচ্ছে... (ডেমো)")
             # Mock video generation
             st.markdown("""
+This is some markdown text
+With multiple lines
+Now properly closed with triple quotes
+""")
             <div style="
                 background: linear-gradient(45deg, #667eea, #764ba2);
                 height: 300px;
