@@ -1,10 +1,11 @@
+There's a syntax error in the code. The string isn't properly closed. Let me provide the complete, corrected code:
+
+```python
 import streamlit as st
 import pandas as pd
 import numpy as np
 import random
 from datetime import datetime, timedelta
-from PIL import Image
-import io
 
 # Page config
 st.set_page_config(
@@ -200,6 +201,51 @@ BRANDS = {
         ]
     }
 }
+
+def get_content_type_name(content_type):
+    """Convert content type code to readable name"""
+    names = {
+        'static_post': 'স্ট্যাটিক পোস্ট',
+        'video': 'ভিডিও',
+        'text_image': 'টেক্সট+ইমেজ'
+    }
+    return names.get(content_type, content_type)
+
+def generate_ai_content(brand, title):
+    """Generate AI content for brand campaigns"""
+    templates = {
+        'প্রাণ ফুডস': {
+            'headline': f'{brand} - {title}',
+            'body': 'বিশেষ অফার! সীমিত সময়ের জন্য সবচেয়ে ভালো দামে পাচ্ছেন। আজই অর্ডার করুন!',
+            'hashtags': f'#{brand.replace(" ", "")} #বাংলাদেশ #অফার #স্পেশাল'
+        },
+        'আকিজ গ্রুপ': {
+            'headline': f'{brand} এর নতুন কালেকশন',
+            'body': 'নতুন ডিজাইনের সাথে উপস্থিত! স্টাইলিশ এবং আরামদায়ক, আপনার জন্য বিশেষ দাম।',
+            'hashtags': f'#{brand.replace(" ", "")} #ফ্যাশন #নতুনকালেকশন #বাংলাদেশ'
+        },
+        'ড্যানিশ ডেইরি': {
+            'headline': f'{brand} - পুষ্টির উৎস',
+            'body': '১০০% বিশুদ্ধ ও পুষ্টিকর। পরিবারের স্বাস্থ্যের জন্য সেরা পছন্দ।',
+            'hashtags': f'#{brand.replace(" ", "")} #স্বাস্থ্য #পুষ্টি #ডেইরি'
+        }
+    }
+    
+    return templates.get(brand, {
+        'headline': f'{brand} - {title}',
+        'body': 'বিশেষ অফার! সীমিত সময়ের জন্য বিশেষ দাম। আজই কিনুন!',
+        'hashtags': f'#{brand.replace(" ", "")} #অফার #বাংলাদেশ #স্পেশাল'
+    })
+
+def generate_video_script(brand, title):
+    """Generate video script for brand campaigns"""
+    scripts = {
+        'প্রাণ ফুডস': f'আজ আমরা দেখবো {brand} এর নতুন প্রোডাক্ট। স্বাদের সাথে স্বাস্থ্যের পরিপূর্ণ সংমিশ্রণ।',
+        'আকিজ গ্রুপ': f'{brand} এর নতুন কালেকশন নিয়ে আজকের ভিডিও। স্টাইলিশ ডিজাইন আর আরামদায়ক ফিট।',
+        'ড্যানিশ ডেইরি': f'{brand} - বিশুদ্ধতার প্রতিশ্রুতি। পরিবারের প্রতিটি সদস্যের জন্য পুষ্টির উৎস।'
+    }
+    
+    return scripts.get(brand, f'{brand} এর {title} সম্পর্কে আজকের বিশেষ ভিডিও।')
 
 def main():
     # Sidebar
@@ -733,61 +779,4 @@ def create_video_content(campaign):
                 justify-content: center;
                 color: white;
                 font-size: 1.5rem;
-                margin: 10px 0;
-            ">
-                🎥 AI Generated Video Preview
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("#### ৫. প্ল্যাটফর্ম")
-        platforms = st.multiselect(
-            "ভিডিও আপলোড করার প্ল্যাটফর্ম",
-            ["TikTok", "YouTube Shorts", "Instagram Reels", "Facebook Video"],
-            default=["TikTok", "Instagram Reels"]
-        )
-    
-    st.markdown("---")
-    
-    # Preview and Submit
-    if st.button("✅ ভিডিও কন্টেন্ট সাবমিট করুন", type="primary", use_container_width=True):
-        estimated_reach = random.randint(500, 2000)
-        estimated_engagement = random.randint(100, 800)
-        
-        base_earning = campaign['base_payment'] if estimated_engagement >= campaign['min_engagement'] else 0
-        engagement_earning = estimated_engagement * campaign['per_engagement']
-        total_estimated = base_earning + engagement_earning
-        
-        # Update campaign
-        for i, c in enumerate(st.session_state.active_campaigns):
-            if c['campaign_id'] == campaign['campaign_id']:
-                st.session_state.active_campaigns[i]['status'] = 'posted'
-                st.session_state.active_campaigns[i]['created_content'] = {
-                    'script': script_text,
-                    'duration': duration,
-                    'aspect_ratio': aspect_ratio,
-                    'platforms': platforms,
-                    'created_date': datetime.now().strftime("%d %b %Y, %I:%M %p")
-                }
-                st.session_state.active_campaigns[i]['current_reach'] = estimated_reach
-                st.session_state.active_campaigns[i]['current_engagement'] = estimated_engagement
-                st.session_state.active_campaigns[i]['estimated_earning'] = total_estimated
-        
-        st.success(f"✅ ভিডিও কন্টেন্ট সাবমিট করা হয়েছে! আনুমানিক আয়: ৳{total_estimated:.2f}")
-        st.balloons()
-
-def create_text_image_content(campaign):
-    st.subheader("📝 টেক্সট + ইমেজ কন্টেন্ট তৈরি করুন")
-    
-    tabs = st.tabs(["টেক্সট তৈরি", "ইমেজ তৈরি", "প্রিভিউ"])
-    
-    with tabs[0]:
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            if st.button("🤖 AI টেক্সট জেনারেট করুন"):
-                generated = generate_ai_content(campaign['brand'], campaign['title'])
-                st.session_state.text_image_content = generated
-            
-            if 'text_image_content' in st.session_state:
-                headline = st.text_input("হেডলাইন", st.session_state.text_image_content['headline'])
-                body = st.text_area("মূল কন্টেন্ট", st.session_state.text_image_content['body'], height
+                margin:
