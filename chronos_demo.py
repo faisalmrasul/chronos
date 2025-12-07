@@ -766,7 +766,4 @@ def create_text_image_content(campaign):
         
         # Calculate estimated earning
         base_earning = campaign['base_payment'] if estimated_engagement >= campaign['min_engagement'] else 0
-        engagement_earning = estimated_engagement * campaign['per_engagement']
-        total_estimated = base_earning + engagement_earning
-        
-        st.metric("আনুমানিক আয়", f"৳
+        engagement_earning = estimated_engagement
