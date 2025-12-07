@@ -1,17 +1,8 @@
-# **Chronos Bazaar - Complete Content Creation Platform**
-
-Here's an enhanced Streamlit prototype with **full content creation capabilities** (text, images, video) using AI models:
-
-```python
 import streamlit as st
 import pandas as pd
 import numpy as np
 import random
 from datetime import datetime, timedelta
-import base64
-from io import BytesIO
-from PIL import Image
-import json
 
 # Page config
 st.set_page_config(
@@ -74,14 +65,19 @@ st.markdown("""
         line-height: 1.8;
         text-align: right;
     }
+    
+    .platform-facebook { background: #1877F2; color: white; }
+    .platform-instagram { background: #E4405F; color: white; }
+    .platform-tiktok { background: #000000; color: white; }
+    .platform-youtube { background: #FF0000; color: white; }
 </style>
 """, unsafe_allow_html=True)
 
 # Initialize session state for content
 if 'created_content' not in st.session_state:
     st.session_state.created_content = []
-if 'templates' not in st.session_state:
-    st.session_state.templates = load_templates()
+if 'balance' not in st.session_state:
+    st.session_state.balance = 2565
 
 def load_templates():
     return {
@@ -108,12 +104,12 @@ def load_templates():
 def main():
     # Sidebar Navigation
     with st.sidebar:
-        st.image("https://img.icons8.com/color/96/000000/video-editing.png", width=80)
+        st.markdown("<h1 style='text-align: center;'>🎨</h1>", unsafe_allow_html=True)
         st.title("Chronos Bazaar")
         
         menu = st.radio(
             "নেভিগেশন মেনু",
-            ["🏠 ড্যাশবোর্ড", "🎨 কন্টেন্ট ক্রিয়েট", "📱 পোস্ট প্রিভিউ", "📊 পারফরম্যান্স", "💰 আয় করুন"]
+            ["🏠 ড্যাশবোর্ড", "📝 টেক্সট তৈরি", "🖼️ ইমেজ তৈরি", "🎥 ভিডিও তৈরি", "📊 পারফরম্যান্স", "💰 আয়"]
         )
         
         st.markdown("---")
@@ -122,32 +118,33 @@ def main():
         st.subheader("📈 আজকের স্ট্যাটস")
         st.metric("তৈরি কন্টেন্ট", f"{len(st.session_state.created_content)}")
         st.metric("আজকের আয়", "৳225")
-        st.metric("এঙ্গেজমেন্ট", "4.8%")
+        st.metric("ব্যালেন্স", f"৳{st.session_state.balance}")
         
         st.markdown("---")
         
         # Quick Actions
-        st.subheader("⚡ কুইক অ্যাকশন")
-        if st.button("🔄 নতুন কন্টেন্ট আইডিয়া", use_container_width=True):
+        if st.button("🔄 নতুন আইডিয়া জেনারেট", use_container_width=True):
             st.session_state.generate_idea = True
         
-        if st.button("📸 রেডিমেট টেমপ্লেট", use_container_width=True):
-            st.session_state.use_template = True
+        if st.button("⚡ দ্রুত পোস্ট তৈরি", use_container_width=True):
+            st.session_state.quick_post = True
 
     # Main Content Area
     if menu == "🏠 ড্যাশবোর্ড":
         show_dashboard()
-    elif menu == "🎨 কন্টেন্ট ক্রিয়েট":
-        show_content_creator()
-    elif menu == "📱 পোস্ট প্রিভিউ":
-        show_post_preview()
+    elif menu == "📝 টেক্সট তৈরি":
+        create_text_content()
+    elif menu == "🖼️ ইমেজ তৈরি":
+        create_image_content()
+    elif menu == "🎥 ভিডিও তৈরি":
+        create_video_content()
     elif menu == "📊 পারফরম্যান্স":
         show_performance()
-    elif menu == "💰 আয় করুন":
+    elif menu == "💰 আয়":
         show_earnings()
 
 def show_dashboard():
-    st.title("🎯 Chronos Bazaar - AI Content Creator")
+    st.title("🎯 Chronos Bazaar - AI কন্টেন্ট ক্রিয়েটর")
     
     # Welcome Message
     st.markdown("""
@@ -163,67 +160,37 @@ def show_dashboard():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.markdown("""
-        <div class="content-card">
-            <h3>📝 টেক্সট কন্টেন্ট</h3>
-            <p>অটো বাংলা ক্যাপশন, হ্যাশট্যাগ, পোস্ট আইডিয়া</p>
-            <button style="background:#3b82f6; color:white; border:none; padding:10px; border-radius:5px; width:100%;">
-                তৈরি করুন
-            </button>
-        </div>
-        """, unsafe_allow_html=True)
+        if st.button("📝 টেক্সট কন্টেন্ট তৈরি", use_container_width=True):
+            st.session_state.current_tab = "text"
+            st.rerun()
+        st.markdown("<p style='text-align: center;'>অটো বাংলা ক্যাপশন, হ্যাশট্যাগ</p>", unsafe_allow_html=True)
     
     with col2:
-        st.markdown("""
-        <div class="content-card">
-            <h3>🖼️ গ্রাফিক্স ডিজাইন</h3>
-            <p>সোশ্যাল মিডিয়া পোস্ট, ব্যানার, ফ্লায়ার</p>
-            <button style="background:#10b981; color:white; border:none; padding:10px; border-radius:5px; width:100%;">
-                তৈরি করুন
-            </button>
-        </div>
-        """, unsafe_allow_html=True)
+        if st.button("🖼️ গ্রাফিক্স ডিজাইন তৈরি", use_container_width=True):
+            st.session_state.current_tab = "image"
+            st.rerun()
+        st.markdown("<p style='text-align: center;'>সোশ্যাল মিডিয়া পোস্ট, ব্যানার</p>", unsafe_allow_html=True)
     
     with col3:
-        st.markdown("""
-        <div class="content-card">
-            <h3>🎥 শর্ট ভিডিও</h3>
-            <p>TikTok/Reels, প্রোডাক্ট ডেমো, টিউটোরিয়াল</p>
-            <button style="background:#8b5cf6; color:white; border:none; padding:10px; border-radius:5px; width:100%;">
-                তৈরি করুন
-            </button>
-        </div>
-        """, unsafe_allow_html=True)
+        if st.button("🎥 শর্ট ভিডিও তৈরি", use_container_width=True):
+            st.session_state.current_tab = "video"
+            st.rerun()
+        st.markdown("<p style='text-align: center;'>TikTok/Reels, প্রোডাক্ট ডেমো</p>", unsafe_allow_html=True)
     
     # Recent Content
     st.subheader("🔄 সাম্প্রতিক তৈরি কন্টেন্ট")
     
     if st.session_state.created_content:
-        for content in st.session_state.created_content[-3:]:
-            display_content_card(content)
+        for i, content in enumerate(st.session_state.created_content[-3:]):
+            with st.expander(f"{i+1}. {content['type'].upper()} - {content.get('business', 'কন্টেন্ট')}"):
+                st.write(f"**টাইপ:** {content['type']}")
+                st.write(f"**তৈরির সময়:** {content['created_at']}")
+                st.write(f"**আয়:** ৳{content['earning']}")
     else:
         st.info("এখনো কোনো কন্টেন্ট তৈরি করা হয়নি। উপরের বাটন ক্লিক করে শুরু করুন!")
 
-def show_content_creator():
-    st.title("🎨 AI কন্টেন্ট ক্রিয়েটর")
-    
-    # Create tabs for different content types
-    tab1, tab2, tab3, tab4 = st.tabs(["📝 টেক্সট", "🖼️ ইমেজ", "🎥 ভিডিও", "📦 কম্বো প্যাক"])
-    
-    with tab1:
-        create_text_content()
-    
-    with tab2:
-        create_image_content()
-    
-    with tab3:
-        create_video_content()
-    
-    with tab4:
-        create_combo_pack()
-
 def create_text_content():
-    st.subheader("📝 AI টেক্সট কন্টেন্ট জেনারেটর")
+    st.title("📝 AI টেক্সট কন্টেন্ট জেনারেটর")
     
     col1, col2 = st.columns([2, 1])
     
@@ -250,9 +217,9 @@ def create_text_content():
         st.markdown("""
         <div style="background:#f0f9ff; padding:20px; border-radius:10px; margin-top:20px;">
             <h4>⚡ AI সুপারিশ:</h4>
-            <p>• ঈদের জন্য বিশেষ পোস্ট তৈরি করুন</p>
+            <p>• ঈদের জন্য বিশেষ পোস্ট</p>
             <p>• গ্রাহকদের সাথে ইন্টারেক্টিভ কন্টেন্ট</p>
-            <p>• ভিডিও ক্যাপশন অটো জেনারেট করুন</p>
+            <p>• ভিডিও ক্যাপশন অটো জেনারেট</p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -284,151 +251,154 @@ def create_text_content():
             with col2:
                 st.markdown("#### 📱 প্ল্যাটফর্ম:")
                 platforms = st.multiselect(
-                    "শেয়ার করার জন্য প্ল্যাটফর্ম",
+                    "শেয়ার করার জন্য",
                     ["Facebook", "Instagram", "TikTok", "WhatsApp", "YouTube"],
                     default=["Facebook", "Instagram"]
                 )
                 
-                if st.button("💾 কন্টেন্ট সেভ করুন", use_container_width=True):
+                if st.button("💾 সেভ করুন", use_container_width=True):
                     content_item = {
                         'type': 'text',
                         'business': business_type,
                         'content': generated_content,
                         'platforms': platforms,
                         'created_at': datetime.now().strftime("%d %b %Y, %I:%M %p"),
-                        'earning': 25  # Fixed earning for text content
+                        'earning': 25
                     }
                     st.session_state.created_content.append(content_item)
+                    st.session_state.balance += 25
                     st.success(f"✅ কন্টেন্ট সেভ করা হয়েছে! আয় যোগ হয়েছে: ৳25")
 
 def create_image_content():
-    st.subheader("🖼️ AI ইমেজ ডিজাইন জেনারেটর")
+    st.title("🖼️ AI ইমেজ ডিজাইন জেনারেটর")
     
     # Template Selection
     st.markdown("### ১. টেমপ্লেট সিলেক্ট করুন")
     
+    templates = load_templates()
     template_cols = st.columns(3)
-    for i, (key, template) in enumerate(st.session_state.templates.items()):
+    
+    selected_template = 'restaurant'  # Default
+    
+    for i, (key, template) in enumerate(templates.items()):
         with template_cols[i]:
             if st.button(f"🎨 {template['name']}", key=f"template_{key}", use_container_width=True):
-                st.session_state.selected_template = key
+                selected_template = key
     
-    if 'selected_template' in st.session_state:
-        selected = st.session_state.templates[st.session_state.selected_template]
+    selected = templates[selected_template]
+    
+    st.markdown(f"### ২. '{selected['name']}' টেমপ্লেট কাস্টোমাইজ করুন")
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        # Text Inputs
+        headline = st.text_input("হেডলাইন", "বিশেষ অফার!")
+        subheading = st.text_input("সাবহেডিং", "শুধু এই সপ্তাহে")
+        offer_text = st.text_input("অফার টেক্সট", "৫০% ছাড়")
+        button_text = st.text_input("বাটন টেক্সট", "অর্ডার করুন")
         
-        st.markdown(f"### ২. '{selected['name']}' টেমপ্লেট কাস্টোমাইজ করুন")
+        # Upload image
+        uploaded_file = st.file_uploader("আপনার প্রোডাক্ট/লোগো ছবি আপলোড করুন", 
+                                       type=['png', 'jpg', 'jpeg'])
+    
+    with col2:
+        # Color Customization
+        st.markdown("#### 🎨 কালার সেটিংস")
+        bg_color = st.color_picker("ব্যাকগ্রাউন্ড কালার", selected['colors'][0])
+        text_color = st.color_picker("টেক্সট কালার", "#FFFFFF")
+        button_color = st.color_picker("বাটন কালার", selected['colors'][1])
         
-        col1, col2 = st.columns([2, 1])
+        # Font Selection
+        font = st.selectbox("ফন্ট সিলেক্ট করুন", selected['fonts'])
+    
+    st.markdown("---")
+    
+    # Generate Image Button
+    if st.button("🖼️ AI ইমেজ ডিজাইন তৈরি করুন", type="primary", use_container_width=True):
+        st.markdown("### 🎨 আপনার ডিজাইন প্রিভিউ")
+        
+        # Create a mock image design
+        col1, col2, col3 = st.columns([2, 1, 1])
         
         with col1:
-            # Text Inputs
-            headline = st.text_input("হেডলাইন", "বিশেষ অফার!")
-            subheading = st.text_input("সাবহেডিং", "শুধু এই সপ্তাহে")
-            offer_text = st.text_input("অফার টেক্সট", "৫০% ছাড়")
-            button_text = st.text_input("বাটন টেক্সট", "অর্ডার করুন")
-            
-            # Upload image
-            uploaded_file = st.file_uploader("আপনার প্রোডাক্ট/লোগো ছবি আপলোড করুন", 
-                                           type=['png', 'jpg', 'jpeg'])
+            # Mock design visualization
+            st.markdown(f"""
+            <div style="
+                background: {bg_color};
+                border-radius: 15px;
+                padding: 30px;
+                color: {text_color};
+                height: 400px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            ">
+                <div>
+                    <h1 style="font-size: 2.5rem; margin: 0;">{headline}</h1>
+                    <h2 style="font-size: 1.5rem; margin: 10px 0 30px 0;">{subheading}</h2>
+                </div>
+                
+                <div style="
+                    background: rgba(255,255,255,0.2);
+                    padding: 20px;
+                    border-radius: 10px;
+                    text-align: center;
+                ">
+                    <h3 style="font-size: 3rem; margin: 0;">{offer_text}</h3>
+                    <p style="font-size: 1.2rem;">সকল প্রোডাক্টে</p>
+                </div>
+                
+                <button style="
+                    background: {button_color};
+                    color: white;
+                    border: none;
+                    padding: 15px 30px;
+                    border-radius: 50px;
+                    font-size: 1.2rem;
+                    font-weight: bold;
+                    cursor: pointer;
+                    margin-top: 30px;
+                ">{button_text}</button>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col2:
-            # Color Customization
-            st.markdown("#### 🎨 কালার সেটিংস")
-            bg_color = st.color_picker("ব্যাকগ্রাউন্ড কালার", selected['colors'][0])
-            text_color = st.color_picker("টেক্সট কালার", "#FFFFFF")
-            button_color = st.color_picker("বাটন কালার", selected['colors'][1])
+            st.markdown("#### 📱 সোশ্যাল মিডিয়া সাইজ")
+            sizes = st.multiselect(
+                "সিলেক্ট সাইজ",
+                ["Facebook Post (1200×630)", "Instagram Square (1080×1080)", 
+                 "Instagram Story (1080×1920)", "Twitter Post (1200×675)"],
+                default=["Facebook Post (1200×630)"]
+            )
+        
+        with col3:
+            st.markdown("#### 💰 আয়ের সুযোগ")
+            earning = 50 if len(sizes) > 1 else 30
+            st.metric("এই ডিজাইনের আয়", f"৳{earning}")
             
-            # Font Selection
-            font = st.selectbox("ফন্ট সিলেক্ট করুন", selected['fonts'])
-        
-        st.markdown("---")
-        
-        # Generate Image Button
-        if st.button("🖼️ AI ইমেজ ডিজাইন তৈরি করুন", type="primary", use_container_width=True):
-            with st.spinner("AI আপনার ইমেজ ডিজাইন তৈরি করছে..."):
-                # Simulate image generation
-                st.markdown("### 🎨 আপনার ডিজাইন প্রিভিউ")
-                
-                # Create a mock image design
-                col1, col2, col3 = st.columns([2, 1, 1])
-                
-                with col1:
-                    # Mock design visualization
-                    st.markdown(f"""
-                    <div style="
-                        background: {bg_color};
-                        border-radius: 15px;
-                        padding: 30px;
-                        color: {text_color};
-                        height: 400px;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: space-between;
-                        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-                    ">
-                        <div>
-                            <h1 style="font-size: 2.5rem; margin: 0;">{headline}</h1>
-                            <h2 style="font-size: 1.5rem; margin: 10px 0 30px 0;">{subheading}</h2>
-                        </div>
-                        
-                        <div style="
-                            background: rgba(255,255,255,0.2);
-                            padding: 20px;
-                            border-radius: 10px;
-                            text-align: center;
-                        ">
-                            <h3 style="font-size: 3rem; margin: 0;">{offer_text}</h3>
-                            <p style="font-size: 1.2rem;">সকল প্রোডাক্টে</p>
-                        </div>
-                        
-                        <button style="
-                            background: {button_color};
-                            color: white;
-                            border: none;
-                            padding: 15px 30px;
-                            border-radius: 50px;
-                            font-size: 1.2rem;
-                            font-weight: bold;
-                            cursor: pointer;
-                            margin-top: 30px;
-                        ">{button_text}</button>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with col2:
-                    st.markdown("#### 📱 সোশ্যাল মিডিয়া সাইজ")
-                    sizes = st.multiselect(
-                        "সিলেক্ট সাইজ",
-                        ["Facebook Post (1200×630)", "Instagram Square (1080×1080)", 
-                         "Instagram Story (1080×1920)", "Twitter Post (1200×675)"],
-                        default=["Facebook Post (1200×630)"]
-                    )
-                
-                with col3:
-                    st.markdown("#### 💰 আয়ের সুযোগ")
-                    earning = 50 if len(sizes) > 1 else 30
-                    st.metric("এই ডিজাইনের আয়", f"৳{earning}")
-                    
-                    if st.button("💾 ডিজাইন সেভ করুন", use_container_width=True):
-                        content_item = {
-                            'type': 'image',
-                            'template': selected['name'],
-                            'design': {
-                                'headline': headline,
-                                'subheading': subheading,
-                                'offer': offer_text,
-                                'colors': [bg_color, text_color, button_color],
-                                'font': font
-                            },
-                            'sizes': sizes,
-                            'created_at': datetime.now().strftime("%d %b %Y, %I:%M %p"),
-                            'earning': earning
-                        }
-                        st.session_state.created_content.append(content_item)
-                        st.success(f"✅ ডিজাইন সেভ করা হয়েছে! আয় যোগ হয়েছে: ৳{earning}")
+            if st.button("💾 ডিজাইন সেভ করুন", use_container_width=True):
+                content_item = {
+                    'type': 'image',
+                    'template': selected['name'],
+                    'design': {
+                        'headline': headline,
+                        'subheading': subheading,
+                        'offer': offer_text,
+                        'colors': [bg_color, text_color, button_color],
+                        'font': font
+                    },
+                    'sizes': sizes,
+                    'created_at': datetime.now().strftime("%d %b %Y, %I:%M %p"),
+                    'earning': earning
+                }
+                st.session_state.created_content.append(content_item)
+                st.session_state.balance += earning
+                st.success(f"✅ ডিজাইন সেভ করা হয়েছে! আয় যোগ হয়েছে: ৳{earning}")
 
 def create_video_content():
-    st.subheader("🎥 AI ভিডিও কন্টেন্ট জেনারেটর")
+    st.title("🎥 AI ভিডিও কন্টেন্ট জেনারেটর")
     
     st.markdown("""
     <div class="video-card">
@@ -439,16 +409,12 @@ def create_video_content():
     
     # Video Creation Steps
     steps = st.columns(4)
-    
     steps[0].markdown("### 1️⃣")
     steps[0].markdown("**টপিক সিলেক্ট**")
-    
     steps[1].markdown("### 2️⃣")
     steps[1].markdown("**স্ক্রিপ্ট জেনারেট**")
-    
     steps[2].markdown("### 3️⃣")
     steps[2].markdown("**মিডিয়া অ্যাড**")
-    
     steps[3].markdown("### 4️⃣")
     steps[3].markdown("**ভিডিও রেন্ডার**")
     
@@ -502,14 +468,11 @@ def create_video_content():
             
             for i in range(100):
                 progress_bar.progress(i + 1)
-                # Simulate processing time
-                import time
-                time.sleep(0.02)
             
             st.markdown("### 🎉 আপনার ভিডিও তৈরি হয়েছে!")
             
             # Mock video player
-            st.markdown("""
+            st.markdown(f"""
             <div style="
                 background: #000;
                 border-radius: 10px;
@@ -536,7 +499,7 @@ def create_video_content():
                     <span>🗣️ {voice}</span>
                 </div>
             </div>
-            """.format(duration=duration, music=music, voice=voice), unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
             
             # Video details and earnings
             col1, col2 = st.columns(2)
@@ -556,7 +519,7 @@ def create_video_content():
             
             with col2:
                 st.markdown("#### 💰 আয়ের সুযোগ")
-                video_earning = 75 + (len(media_files) * 5) if media_files else 75
+                video_earning = 75 + (len(media_files) * 5 if media_files else 0)
                 st.metric("এই ভিডিওর আয়", f"৳{video_earning}")
                 
                 platforms = st.multiselect(
@@ -576,143 +539,8 @@ def create_video_content():
                         'earning': video_earning
                     }
                     st.session_state.created_content.append(content_item)
+                    st.session_state.balance += video_earning
                     st.success(f"✅ ভিডিও সেভ করা হয়েছে! আয় যোগ হয়েছে: ৳{video_earning}")
-
-def create_combo_pack():
-    st.subheader("📦 কম্বো প্যাক - টেক্সট + ইমেজ + ভিডিও")
-    
-    st.markdown("""
-    <div class="content-card">
-        <h3>🚀 সম্পূর্ণ কন্টেন্ট প্যাকেজ</h3>
-        <p>এক ক্লিকে সব ধরণের কন্টেন্ট তৈরি করুন: টেক্সট পোস্ট + গ্রাফিক্স + শর্ট ভিডিও</p>
-        <span class="ai-badge">AI সুপারিশ</span>
-        <span class="ai-badge">টাইম সেভার</span>
-        <span class="ai-badge">হাই আয়</span>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Campaign Theme
-    theme = st.selectbox(
-        "ক্যাম্পেইন থিম সিলেক্ট করুন",
-        ["ঈদ সেল", "বর্ষা সেল", "নতুন বছরের অফার", "গ্র্যান্ড ওপেনিং", 
-         "সপ্তাহব্যাপী ছাড়", "ফেস্টিভ্যাল স্পেশাল"]
-    )
-    
-    # Business Details
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        business_name = st.text_input("ব্যবসার নাম", "রাজুর ফ্যাশন হাউস")
-        offer_details = st.text_area("অফার ডিটেইলস", "সকল প্রোডাক্টে ৫০% ছাড়, ৩ দিনের জন্য")
-        primary_color = st.color_picker("প্রাইমারি কালার", "#FF6B6B")
-    
-    with col2:
-        campaign_duration = st.selectbox("ক্যাম্পেইন ডিউরেশন", ["৩ দিন", "১ সপ্তাহ", "২ সপ্তাহ", "১ মাস"])
-        target_platforms = st.multiselect(
-            "টার্গেট প্ল্যাটফর্ম",
-            ["Facebook", "Instagram", "TikTok", "YouTube", "WhatsApp"],
-            default=["Facebook", "Instagram", "TikTok"]
-        )
-        upload_logo = st.file_uploader("লোগো আপলোড করুন", type=['png', 'jpg'])
-    
-    st.markdown("---")
-    
-    # Preview Package
-    if st.button("👁️ কম্বো প্যাক প্রিভিউ দেখুন", use_container_width=True):
-        st.markdown("### 📦 আপনার কম্বো প্যাকেজ কন্টেন্ট:")
-        
-        # Text Content Preview
-        with st.expander("📝 টেক্সট কন্টেন্ট", expanded=True):
-            st.markdown(f"""
-            **হেডলাইন:** {theme} - {business_name}
-            
-            **বডি:** {offer_details}
-            
-            **হ্যাশট্যাগ:** #{business_name.replace(' ', '')} #{theme.replace(' ', '')} #{campaign_duration.replace(' ', '')}
-            
-            **প্ল্যাটফর্ম:** {', '.join(target_platforms)}
-            """)
-        
-        # Image Content Preview
-        with st.expander("🖼️ ইমেজ কন্টেন্ট"):
-            col1, col2 = st.columns(2)
-            with col1:
-                # Mock image 1
-                st.markdown(f"""
-                <div style="
-                    background: {primary_color};
-                    height: 200px;
-                    border-radius: 10px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: white;
-                    font-weight: bold;
-                    margin: 10px 0;
-                ">
-                    {business_name}<br>{theme}
-                </div>
-                """, unsafe_allow_html=True)
-            with col2:
-                # Mock image 2
-                st.markdown(f"""
-                <div style="
-                    background: #4ECDC4;
-                    height: 200px;
-                    border-radius: 10px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: white;
-                    font-weight: bold;
-                    margin: 10px 0;
-                ">
-                    {offer_details}
-                </div>
-                """, unsafe_allow_html=True)
-        
-        # Video Content Preview
-        with st.expander("🎥 ভিডিও কন্টেন্ট"):
-            st.markdown(f"""
-            **ভিডিও টাইপ:** {theme} প্রমোশনাল ভিডিও
-            
-            **ডিউরেশন:** ১৫-৩০ সেকেন্ড
-            
-            **স্টাইল:** {random.choice(['TikTok Trend', 'Professional', 'Casual'])}
-            
-            **ইনক্লুড:** লোগো, অফার ডিটেইলস, CTA বাটন
-            """)
-        
-        # Earnings and Action
-        st.markdown("---")
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            total_earning = 150  # Base for combo pack
-            st.metric("💵 কম্বো প্যাক আয়", f"৳{total_earning}")
-            st.info("""
-            **আয়ের বিস্তারিত:**
-            • টেক্সট কন্টেন্ট: ৳25
-            • ইমেজ ডিজাইন (২টি): ৳50
-            • ভিডিও কন্টেন্ট: ৳75
-            • কম্বো বোনাস: ৳20
-            """)
-        
-        with col2:
-            if st.button("✅ কম্বো প্যাক তৈরি করুন", type="primary", use_container_width=True):
-                content_item = {
-                    'type': 'combo',
-                    'theme': theme,
-                    'business': business_name,
-                    'offer': offer_details,
-                    'platforms': target_platforms,
-                    'created_at': datetime.now().strftime("%d %b %Y, %I:%M %p"),
-                    'earning': total_earning,
-                    'components': ['text', 'image1', 'image2', 'video']
-                }
-                st.session_state.created_content.append(content_item)
-                st.success(f"✅ কম্বো প্যাক তৈরি করা হয়েছে! মোট আয়: ৳{total_earning}")
-                st.balloons()
 
 def generate_ai_text(business_type, content_type, tone, keywords):
     """Generate AI text content based on inputs"""
@@ -732,6 +560,14 @@ def generate_ai_text(business_type, content_type, tone, keywords):
                 "সিজন শেষের সেল চলছে। সকল প্রোডাক্টে ৫০% পর্যন্ত ছাড়।",
                 "সপ্তাহব্যাপী বিশেষ অফার। শুধু স্টোর ভিজিটরদের জন্য।"
             ]
+        },
+        "ইলেকট্রনিক্স": {
+            "headline": ["নতুন প্রোডাক্ট লঞ্চ!", "ফ্ল্যাশ সেল", "ওয়ারেন্টি অফার"],
+            "body": [
+                "নতুন স্মার্টফোন এসেছে। প্রি-অর্ডার শুরু হয়েছে!",
+                "ফ্ল্যাশ সেল! শুধু আজ ১০টা থেকে ৫টা পর্যন্ত।",
+                "বিশেষ ওয়ারেন্টি অফার সাথে বিনামূল্যে ডেলিভারি।"
+            ]
         }
     }
     
@@ -748,75 +584,124 @@ def generate_ai_text(business_type, content_type, tone, keywords):
     
     return content
 
-def show_post_preview():
-    st.title("📱 সোশ্যাল মিডিয়া প্রিভিউ")
+def show_performance():
+    st.title("📊 কন্টেন্ট পারফরম্যান্স")
     
     if not st.session_state.created_content:
-        st.info("এখনো কোনো কন্টেন্ট তৈরি করা হয়নি। প্রথমে কন্টেন্ট তৈরি করুন!")
+        st.info("এখনো কোনো কন্টেন্ট তৈরি করা হয়নি!")
         return
     
-    # Select content to preview
-    content_options = [f"{i+1}. {c['type'].title()} - {c.get('business', c.get('theme', 'Content'))} ({c['created_at']})" 
-                      for i, c in enumerate(st.session_state.created_content)]
+    # Performance metrics
+    col1, col2, col3, col4 = st.columns(4)
     
-    selected_idx = st.selectbox(
-        "প্রিভিউ দেখতে কন্টেন্ট সিলেক্ট করুন",
-        range(len(content_options)),
-        format_func=lambda x: content_options[x]
-    )
+    total_earning = sum([c['earning'] for c in st.session_state.created_content])
+    col1.metric("মোট আয়", f"৳{total_earning}")
+    col2.metric("মোট কন্টেন্ট", len(st.session_state.created_content))
     
-    selected_content = st.session_state.created_content[selected_idx]
+    # Content type distribution
+    content_types = {}
+    for content in st.session_state.created_content:
+        content_types[content['type']] = content_types.get(content['type'], 0) + 1
     
-    # Display preview based on content type
-    st.markdown(f"### 🎨 {selected_content['type'].title()} কন্টেন্ট প্রিভিউ")
+    col3.metric("টেক্সট কন্টেন্ট", content_types.get('text', 0))
+    col4.metric("ভিডিও কন্টেন্ট", content_types.get('video', 0))
     
-    # Platform selection for preview
-    platform = st.radio(
-        "প্ল্যাটফর্ম প্রিভিউ",
-        ["Facebook", "Instagram", "TikTok", "YouTube"],
-        horizontal=True
-    )
+    # Performance chart
+    st.markdown("---")
+    st.subheader("📈 আয়ের ট্রেন্ড")
     
-    # Platform-specific preview
-    st.markdown(f"""
-    <div style="
-        background: {'#1877F2' if platform == 'Facebook' else 
-                    '#E4405F' if platform == 'Instagram' else
-                    '#000000' if platform == 'TikTok' else
-                    '#FF0000'};
-        color: white;
-        padding: 15px;
-        border-radius: 10px 10px 0 0;
-        display: flex;
-        align-items: center;
-        font-weight: bold;
-    ">
-        <span class="social-media-icon">
-            {'📘' if platform == 'Facebook' else 
-             '📷' if platform == 'Instagram' else
-             '🎵' if platform == 'TikTok' else '▶️'}
-        </span>
-        {platform} পোস্ট প্রিভিউ
-    </div>
+    # Create sample data for chart
+    dates = [(datetime.now() - timedelta(days=i)).strftime('%d %b') for i in range(7, -1, -1)]
+    earnings = [random.randint(100, 300) for _ in range(8)]
     
-    <div class="post-preview" style="border-top: none; border-radius: 0 0 10px 10px;">
-        <div style="display: flex; align-items: center; margin-bottom: 15px;">
-            <div style="
-                width: 50px;
-                height: 50px;
-                background: #3b82f6;
-                border-radius: 50%;
-                margin-right: 10px;
-            "></div>
-            <div>
-                <strong>আপনার ব্যবসার নাম</strong><br>
-                <small>Just now • 🌍</small>
-            </div>
+    chart_data = pd.DataFrame({
+        'দিন': dates,
+        'আয় (৳)': earnings
+    })
+    
+    st.line_chart(chart_data.set_index('দিন'))
+    
+    # Content list
+    st.markdown("---")
+    st.subheader("📋 সব কন্টেন্ট")
+    
+    for i, content in enumerate(st.session_state.created_content):
+        with st.expander(f"{i+1}. {content['type'].upper()} - ৳{content['earning']}"):
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.write(f"**বিজনেস:** {content.get('business', content.get('topic', 'N/A'))}")
+                st.write(f"**তৈরির সময়:** {content['created_at']}")
+                st.write(f"**প্ল্যাটফর্ম:** {', '.join(content.get('platforms', ['N/A']))}")
+            with col2:
+                st.metric("আয়", f"৳{content['earning']}")
+
+def show_earnings():
+    st.title("💰 আপনার আয়ের বিশদ")
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.markdown(f"""
+        <div class="content-card">
+            <h2>মোট আয়: ৳{st.session_state.balance}</h2>
+            <p>এই মাসে: ৳{st.session_state.balance + 1000}</p>
+            <p>গত মাসে: ৳{st.session_state.balance - 500}</p>
         </div>
+        """, unsafe_allow_html=True)
         
-        <p>{selected_content.get('content', {}).get('body', selected_content.get('offer', 'কন্টেন্ট বডি...'))}</p>
+        # Earning breakdown
+        st.subheader("📊 আয়ের ব্রেকডাউন")
         
-        <div style="
-            background: #e5e7eb;
-            height: {'150px' if selected_content['type'] == 'text' else '300px'};
-            border-radius: 10px;
+        if st.session_state.created_content:
+            earning_data = pd.DataFrame({
+                'কন্টেন্ট টাইপ': [c['type'] for c in st.session_state.created_content],
+                'আয়': [c['earning'] for c in st.session_state.created_content],
+                'তারিখ': [c['created_at'] for c in st.session_state.created_content]
+            })
+            
+            st.dataframe(earning_data, use_container_width=True)
+        
+        # Withdrawal section
+        st.subheader("💸 bKash উত্তোলন")
+        
+        bkash_number = st.text_input("bKash নম্বর", "01XXXXXXXXX")
+        amount = st.number_input("টাকার পরিমাণ", 
+                               min_value=100, 
+                               max_value=st.session_state.balance,
+                               value=min(500, st.session_state.balance))
+        
+        if st.button("✅ bKash-এ পাঠান", type="primary", use_container_width=True):
+            if bkash_number and len(bkash_number) == 11:
+                st.session_state.balance -= amount
+                st.success(f"✅ ৳{amount} {bkash_number} নম্বরে পাঠানো হয়েছে!")
+                st.balloons()
+            else:
+                st.error("❌ সঠিক bKash নম্বর দিন")
+    
+    with col2:
+        st.subheader("🏆 শীর্ষ উপার্জনকারী")
+        
+        top_earners = [
+            {"name": "রাজু (ঢাকা)", "earning": 15250, "business": "চা দোকান"},
+            {"name": "সুমি (চট্টগ্রাম)", "earning": 12750, "business": "কাপড়ের দোকান"},
+            {"name": "করিম (সিলেট)", "earning": 11200, "business": "রেস্টুরেন্ট"},
+            {"name": "আপনি", "earning": st.session_state.balance, "business": "আপনার দোকান"}
+        ]
+        
+        for earner in top_earners:
+            st.markdown(f"""
+            <div style="
+                background: white;
+                padding: 15px;
+                border-radius: 10px;
+                margin: 10px 0;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            ">
+                <b>{earner['name']}</b><br>
+                <small>{earner['business']}</small><br>
+                <b style="color: #10b981;">৳{earner['earning']}</b>
+            </div>
+            """, unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    main()
