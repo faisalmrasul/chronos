@@ -647,4 +647,101 @@ def show_earnings():
         
         st.metric("মোট ক্যাম্পেইন", total_campaigns)
         st.metric("সফলতার হার", f"{success_rate:.1f}%")
-        st.metric("গড় আয় প্রতি ক্যাম্পেই
+        
+        avg_earning = st.session_state.balance / total_campaigns if total_campaigns > 0 else 0
+        st.metric("গড় আয় প্রতি ক্যাম্পেইন", f"৳{avg_earning:.2f}")
+
+def main():
+    """Main application function"""
+    # Sidebar
+    with st.sidebar:
+        st.markdown("<h1 style='text-align: center;'>💰</h1>", unsafe_allow_html=True)
+        st.title("Chronos Bazaar")
+        
+        menu = st.radio(
+            "নেভিগেশন মেনু",
+            ["🏠 ড্যাশবোর্ড", "🏢 ব্র্যান্ড মার্কেটপ্লেস", "🎨 কন্টেন্ট তৈরি", "📊 আমার ক্যাম্পেইন", "💰 আয় ও উত্তোলন"]
+        )
+        
+        st.markdown("---")
+        
+        # Quick Stats
+        st.subheader("📊 আমার স্ট্যাটস")
+        st.metric("বর্তমান ব্যালেন্স", f"৳{st.session_state.balance}")
+        st.metric("সক্রিয় ক্যাম্পেইন", len(st.session_state.active_campaigns))
+        st.metric("সম্পন্ন ক্যাম্পেইন", len(st.session_state.completed_campaigns))
+        
+        st.markdown("---")
+        
+        # Quick Actions
+        if st.button("🔄 নতুন ক্যাম্পেইন খুঁজুন", use_container_width=True):
+            st.session_state.show_marketplace = True
+
+    # Main Content
+    if menu == "🏠 ড্যাশবোর্ড":
+        show_dashboard()
+    elif menu == "🏢 ব্র্যান্ড মার্কেটপ্লেস":
+        show_marketplace()
+    elif menu == "🎨 কন্টেন্ট তৈরি":
+        create_content()
+    elif menu == "📊 আমার ক্যাম্পেইন":
+        show_my_campaigns()
+    elif menu == "💰 আয় ও উত্তোলন":
+        show_earnings()
+
+def show_dashboard():
+    """Show main dashboard"""
+    st.title("💰 Chronos Bazaar - ব্র্যান্ড মার্কেটপ্লেস")
+    
+    # Welcome Card
+    st.markdown(f"""
+    <div class="earning-card">
+        <h2>স্বাগতম! আপনার আয়ের সুযোগের ড্যাশবোর্ড</h2>
+        <p class="bangla-text">ব্র্যান্ডগুলোর জন্য কন্টেন্ট তৈরি করুন, টার্গেট রিচ পূরণ করুন এবং অর্থ উপার্জন করুন!</p>
+        <h3>বর্তমান ব্যালেন্স: ৳{st.session_state.balance}</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Quick Stats
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        active_earning = sum([c.get('estimated_earning', 0) for c in st.session_state.active_campaigns])
+        st.metric("সক্রিয় ক্যাম্পেইন আয়", f"৳{active_earning}", "সম্ভাব্য")
+    
+    with col2:
+        completed_earning = sum([c.get('paid_amount', 0) for c in st.session_state.completed_campaigns])
+        st.metric("সম্পন্ন ক্যাম্পেইন আয়", f"৳{completed_earning}", "প্রাপ্ত")
+    
+    with col3:
+        total_content = len(st.session_state.content_created)
+        st.metric("তৈরি কন্টেন্ট", total_content)
+    
+    st.markdown("---")
+    
+    # Recommended Campaigns
+    st.subheader("🔥 সুপারিশকৃত ক্যাম্পেইন")
+    
+    # Show 3 random campaigns
+    all_campaigns = []
+    for brand_name, brand_data in BRANDS.items():
+        for campaign in brand_data['campaigns']:
+            if campaign['status'] == 'active':
+                all_campaigns.append({
+                    'brand': brand_name,
+                    'brand_logo': brand_data['logo'],
+                    'brand_color': brand_data['color'],
+                    **campaign
+                })
+    
+    if all_campaigns:
+        rec_campaigns = random.sample(all_campaigns, min(3, len(all_campaigns)))
+        
+        for campaign in rec_campaigns:
+            col1, col2 = st.columns([4, 1])
+            
+            with col1:
+                st.markdown(f"""
+                <div class="brand-card" style="border-left-color: {campaign['brand_color']};">
+                    <h3>{campaign['brand_logo']} {campaign['brand']} - {campaign['title']}</h3>
+                    <p>{campaign['description']
