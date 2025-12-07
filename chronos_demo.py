@@ -775,7 +775,7 @@ With multiple lines
 Now properly closed with triple quotes
 """)
             <div style="
-                background: linear-gradient(45deg, #667eea, #764ba2);
+                "background-color: #f0f0f0; padding: 10px;">Content</div>';
                 height: 300px;
                 border-radius: 10px;
                 display: flex;
