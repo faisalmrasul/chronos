@@ -7,7 +7,7 @@ import time
 
 # Page config
 st.set_page_config(
-    page_title="Chronos Bazaar - Brand Marketplace",
+    page_title="CollabNet – Where Brands Meet Creators",
     page_icon="💰",
     layout="wide",
     initial_sidebar_state="expanded"
