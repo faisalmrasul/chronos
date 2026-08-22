@@ -4,1394 +4,1423 @@ import numpy as np
 import random
 from datetime import datetime, timedelta
 import time
+import json
 
-# Page config
+# ==================== PAGE CONFIG ====================
 st.set_page_config(
-    page_title="CollabNet – Global Creator Collaboration Platform",
+    page_title="CollabNet - Global Creator Platform",
     page_icon="🌍",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# ==================== CUSTOM CSS ====================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
     
     * {
         font-family: 'Inter', sans-serif;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
     }
     
-    .brand-card {
+    .main-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        padding: 30px;
+        border-radius: 20px;
+        color: white;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+    }
+    
+    .main-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+    }
+    
+    .main-header p {
+        font-size: 1.1rem;
+        opacity: 0.95;
+    }
+    
+    .stat-card {
         background: white;
-        border-radius: 15px;
         padding: 20px;
-        margin: 10px 0;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        border-left: 5px solid;
-        border-left-color: #3b82f6;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        text-align: center;
+        transition: transform 0.3s ease;
+        border: 1px solid #f0f0f0;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    }
+    
+    .stat-card .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+    
+    .stat-card .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a1a2e;
+    }
+    
+    .stat-card .stat-label {
+        font-size: 0.9rem;
+        color: #6b7280;
+        margin-top: 5px;
     }
     
     .campaign-card {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 20px;
+        padding: 25px;
         border-radius: 15px;
-        margin: 10px 0;
+        margin: 15px 0;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
     }
     
-    .earning-card {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-        padding: 20px;
-        border-radius: 15px;
-    }
-    
-    .status-active { color: #10b981; font-weight: bold; }
-    .status-pending { color: #f59e0b; font-weight: bold; }
-    .status-completed { color: #6b7280; font-weight: bold; }
-    
-    .reach-badge {
-        background: #3b82f6;
-        color: white;
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-size: 0.9rem;
-        display: inline-block;
-        margin: 5px;
-    }
-    
-    .main-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 20px;
-        border-radius: 15px;
-        color: white;
-        margin-bottom: 30px;
-    }
-    
-    .currency-selector {
+    .brand-card {
         background: white;
-        padding: 10px;
+        border-radius: 15px;
+        padding: 25px;
+        margin: 15px 0;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        border-left: 5px solid;
+        transition: transform 0.3s ease;
+    }
+    
+    .brand-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    }
+    
+    .action-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 25px;
         border-radius: 10px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .action-btn:hover {
+        transform: scale(1.02);
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin: 3px;
+    }
+    
+    .badge-success { background: #10b981; color: white; }
+    .badge-warning { background: #f59e0b; color: white; }
+    .badge-info { background: #3b82f6; color: white; }
+    .badge-danger { background: #ef4444; color: white; }
+    
+    .notification-item {
+        background: #f8f9fa;
+        padding: 12px 15px;
+        border-radius: 10px;
+        margin: 8px 0;
+        border-left: 4px solid;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .notification-item .time {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+    
+    .sidebar-section {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        margin: 10px 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .divider {
+        height: 1px;
+        background: linear-gradient(to right, transparent, #e5e7eb, transparent);
+        margin: 20px 0;
+    }
+    
+    @media (max-width: 768px) {
+        .main-header h1 { font-size: 1.8rem; }
+        .stat-card .stat-value { font-size: 1.5rem; }
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state
-if 'balance' not in st.session_state:
-    st.session_state.balance = 1250
-if 'active_campaigns' not in st.session_state:
-    st.session_state.active_campaigns = []
-if 'completed_campaigns' not in st.session_state:
-    st.session_state.completed_campaigns = []
-if 'content_created' not in st.session_state:
-    st.session_state.content_created = []
-if 'notifications' not in st.session_state:
-    st.session_state.notifications = []
-if 'currency' not in st.session_state:
-    st.session_state.currency = 'USD'
-if 'region' not in st.session_state:
-    st.session_state.region = 'Global'
-if 'language' not in st.session_state:
-    st.session_state.language = 'en'
+# ==================== SESSION STATE ====================
+def init_session_state():
+    """Initialize all session state variables"""
+    defaults = {
+        'balance': 1250.0,
+        'active_campaigns': [],
+        'completed_campaigns': [],
+        'content_created': [],
+        'notifications': [],
+        'currency': 'USD',
+        'language': 'en',
+        'page': 'dashboard',
+        'user_name': 'Creator',
+        'user_level': 'Pro',
+        'total_earned': 0.0,
+        'campaign_history': []
+    }
+    
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
 
-# Currency configurations
+init_session_state()
+
+# ==================== CONFIGURATIONS ====================
 CURRENCIES = {
-    'USD': {'symbol': '$', 'rate': 1.0, 'name': 'US Dollar'},
-    'EUR': {'symbol': '€', 'rate': 0.92, 'name': 'Euro'},
-    'GBP': {'symbol': '£', 'rate': 0.78, 'name': 'British Pound'},
-    'BDT': {'symbol': '৳', 'rate': 110.0, 'name': 'Bangladeshi Taka'},
-    'INR': {'symbol': '₹', 'rate': 83.0, 'name': 'Indian Rupee'},
-    'JPY': {'symbol': '¥', 'rate': 148.0, 'name': 'Japanese Yen'},
-    'AUD': {'symbol': 'A$', 'rate': 1.52, 'name': 'Australian Dollar'},
-    'CAD': {'symbol': 'C$', 'rate': 1.35, 'name': 'Canadian Dollar'},
-    'SGD': {'symbol': 'S$', 'rate': 1.34, 'name': 'Singapore Dollar'},
-    'AED': {'symbol': 'د.إ', 'rate': 3.67, 'name': 'UAE Dirham'}
+    'USD': {'symbol': '$', 'rate': 1.0, 'name': 'US Dollar', 'emoji': '💵'},
+    'EUR': {'symbol': '€', 'rate': 0.92, 'name': 'Euro', 'emoji': '💶'},
+    'GBP': {'symbol': '£', 'rate': 0.78, 'name': 'British Pound', 'emoji': '💷'},
+    'BDT': {'symbol': '৳', 'rate': 110.0, 'name': 'Bangladeshi Taka', 'emoji': '🇧🇩'},
+    'INR': {'symbol': '₹', 'rate': 83.0, 'name': 'Indian Rupee', 'emoji': '🇮🇳'},
+    'JPY': {'symbol': '¥', 'rate': 148.0, 'name': 'Japanese Yen', 'emoji': '💴'},
+    'AUD': {'symbol': 'A$', 'rate': 1.52, 'name': 'Australian Dollar', 'emoji': '🇦🇺'},
+    'CAD': {'symbol': 'C$', 'rate': 1.35, 'name': 'Canadian Dollar', 'emoji': '🇨🇦'},
+    'SGD': {'symbol': 'S$', 'rate': 1.34, 'name': 'Singapore Dollar', 'emoji': '🇸🇬'},
+    'AED': {'symbol': 'د.إ', 'rate': 3.67, 'name': 'UAE Dirham', 'emoji': '🇦🇪'},
+    'BRL': {'symbol': 'R$', 'rate': 4.95, 'name': 'Brazilian Real', 'emoji': '🇧🇷'},
+    'MXN': {'symbol': 'MX$', 'rate': 16.8, 'name': 'Mexican Peso', 'emoji': '🇲🇽'},
+    'KRW': {'symbol': '₩', 'rate': 1320, 'name': 'South Korean Won', 'emoji': '🇰🇷'},
+    'TRY': {'symbol': '₺', 'rate': 28.5, 'name': 'Turkish Lira', 'emoji': '🇹🇷'},
+    'ZAR': {'symbol': 'R', 'rate': 18.5, 'name': 'South African Rand', 'emoji': '🇿🇦'},
 }
 
-# Languages supported
 LANGUAGES = {
-    'en': {'name': 'English', 'flag': '🇬🇧'},
-    'bn': {'name': 'বাংলা', 'flag': '🇧🇩'},
-    'hi': {'name': 'हिन्दी', 'flag': '🇮🇳'},
-    'es': {'name': 'Español', 'flag': '🇪🇸'},
-    'fr': {'name': 'Français', 'flag': '🇫🇷'},
-    'de': {'name': 'Deutsch', 'flag': '🇩🇪'},
-    'ja': {'name': '日本語', 'flag': '🇯🇵'},
-    'zh': {'name': '中文', 'flag': '🇨🇳'},
-    'ar': {'name': 'العربية', 'flag': '🇸🇦'},
-    'pt': {'name': 'Português', 'flag': '🇧🇷'}
+    'en': {'name': 'English', 'flag': '🇬🇧', 'code': 'en'},
+    'es': {'name': 'Español', 'flag': '🇪🇸', 'code': 'es'},
+    'fr': {'name': 'Français', 'flag': '🇫🇷', 'code': 'fr'},
+    'de': {'name': 'Deutsch', 'flag': '🇩🇪', 'code': 'de'},
+    'ja': {'name': '日本語', 'flag': '🇯🇵', 'code': 'ja'},
+    'zh': {'name': '中文', 'flag': '🇨🇳', 'code': 'zh'},
+    'ar': {'name': 'العربية', 'flag': '🇸🇦', 'code': 'ar'},
+    'hi': {'name': 'हिन्दी', 'flag': '🇮🇳', 'code': 'hi'},
+    'bn': {'name': 'বাংলা', 'flag': '🇧🇩', 'code': 'bn'},
+    'pt': {'name': 'Português', 'flag': '🇧🇷', 'code': 'pt'},
+    'ru': {'name': 'Русский', 'flag': '🇷🇺', 'code': 'ru'},
+    'it': {'name': 'Italiano', 'flag': '🇮🇹', 'code': 'it'},
 }
 
-# Language translations
-TRANSLATIONS = {
-    'en': {
-        'app_name': 'CollabNet',
-        'tagline': 'Global Creator Collaboration Platform',
-        'balance': 'Balance',
-        'active_campaigns': 'Active Campaigns',
-        'completed_campaigns': 'Completed Campaigns',
-        'total_earnings': 'Total Earnings',
-        'quick_actions': 'Quick Actions',
-        'browse_brands': 'Browse Brands',
-        'create_content': 'Create Content',
-        'view_performance': 'View Performance',
-        'recent_activity': 'Recent Activity',
-        'no_active_campaigns': 'No active or completed campaigns yet.',
-        'brand_marketplace': 'Brand Marketplace',
-        'search_brand': 'Search brand/campaign',
-        'content_type_filter': 'Content Type Filter',
-        'payment_filter': 'Payment Filter',
-        'all': 'All',
-        'video': 'Video',
-        'static_post': 'Static Post',
-        'text_image': 'Text+Image',
-        'under_100': 'Under 100',
-        'between_100_150': '100-150',
-        'above_150': 'Above 150',
-        'deadline': 'Deadline',
-        'days_left': 'Days Left',
-        'accept_campaign': 'Accept Campaign',
-        'already_accepted': 'Already Accepted',
-        'create_content_for': 'Create Content For',
-        'ai_generate': 'AI Generate',
-        'upload': 'Upload',
-        'use_template': 'Use Template',
-        'preview': 'Preview',
-        'submit_content': 'Submit Content',
-        'estimated_performance': 'Estimated Performance',
-        'estimated_reach': 'Estimated Reach',
-        'estimated_engagement': 'Estimated Engagement',
-        'estimated_earning': 'Estimated Earning',
-        'performance_tracking': 'Performance Tracking',
-        'time_filter': 'Time Filter',
-        'campaign_filter': 'Campaign Filter',
-        'all_time': 'All Time',
-        'last_7_days': 'Last 7 Days',
-        'last_30_days': 'Last 30 Days',
-        'this_month': 'This Month',
-        'all_campaigns': 'All Campaigns',
-        'performance_metrics': 'Performance Metrics',
-        'total_reach': 'Total Reach',
-        'total_engagement': 'Total Engagement',
-        'total_campaigns': 'Total Campaigns',
-        'campaign_performance': 'Campaign Performance',
-        'brand': 'Brand',
-        'campaign': 'Campaign',
-        'status': 'Status',
-        'reach': 'Reach',
-        'engagement': 'Engagement',
-        'start_date': 'Start Date'
-    },
-    'bn': {
-        'app_name': 'কল্যাবনেট',
-        'tagline': 'গ্লোবাল ক্রিয়েটর সহযোগিতা প্ল্যাটফর্ম',
-        'balance': 'ব্যালেন্স',
-        'active_campaigns': 'সক্রিয় ক্যাম্পেইন',
-        'completed_campaigns': 'সম্পন্ন ক্যাম্পেইন',
-        'total_earnings': 'মোট আয়',
-        'quick_actions': 'দ্রুত একশন',
-        'browse_brands': 'ব্র্যান্ড ব্রাউজ করুন',
-        'create_content': 'কন্টেন্ট তৈরি করুন',
-        'view_performance': 'পারফরম্যান্স দেখুন',
-        'recent_activity': 'সাম্প্রতিক কার্যকলাপ',
-        'no_active_campaigns': 'কোনো সক্রিয় বা সম্পন্ন ক্যাম্পেইন নেই।',
-        'brand_marketplace': 'ব্র্যান্ড মার্কেটপ্লেস',
-        'search_brand': 'ব্র্যান্ড/ক্যাম্পেইন সার্চ করুন',
-        'content_type_filter': 'কন্টেন্ট টাইপ ফিল্টার',
-        'payment_filter': 'পেমেন্ট ফিল্টার',
-        'all': 'সবগুলো',
-        'video': 'ভিডিও',
-        'static_post': 'স্ট্যাটিক পোস্ট',
-        'text_image': 'টেক্সট+ইমেজ',
-        'under_100': '১০০ এর নিচে',
-        'between_100_150': '১০০-১৫০',
-        'above_150': '১৫০ এর উপরে',
-        'deadline': 'ডেডলাইন',
-        'days_left': 'দিন বাকি',
-        'accept_campaign': 'ক্যাম্পেইন গ্রহণ করুন',
-        'already_accepted': 'ইতিমধ্যে গ্রহণ করা হয়েছে',
-        'create_content_for': 'কন্টেন্ট তৈরি করার জন্য',
-        'ai_generate': 'AI জেনারেট করুন',
-        'upload': 'আপলোড করুন',
-        'use_template': 'টেমপ্লেট ব্যবহার করুন',
-        'preview': 'প্রিভিউ',
-        'submit_content': 'কন্টেন্ট সাবমিট করুন',
-        'estimated_performance': 'আনুমানিক পারফরম্যান্স',
-        'estimated_reach': 'আনুমানিক রিচ',
-        'estimated_engagement': 'আনুমানিক এঙ্গেজমেন্ট',
-        'estimated_earning': 'আনুমানিক আয়',
-        'performance_tracking': 'পারফরম্যান্স ট্র্যাকিং',
-        'time_filter': 'সময় ফিল্টার',
-        'campaign_filter': 'ক্যাম্পেইন ফিল্টার',
-        'all_time': 'সব সময়',
-        'last_7_days': 'সর্বশেষ ৭ দিন',
-        'last_30_days': 'সর্বশেষ ৩০ দিন',
-        'this_month': 'এই মাস',
-        'all_campaigns': 'সব ক্যাম্পেইন',
-        'performance_metrics': 'পারফরম্যান্স মেট্রিক্স',
-        'total_reach': 'মোট রিচ',
-        'total_engagement': 'মোট এঙ্গেজমেন্ট',
-        'total_campaigns': 'মোট ক্যাম্পেইন',
-        'campaign_performance': 'ক্যাম্পেইন পারফরম্যান্স',
-        'brand': 'ব্র্যান্ড',
-        'campaign': 'ক্যাম্পেইন',
-        'status': 'স্ট্যাটাস',
-        'reach': 'রিচ',
-        'engagement': 'এঙ্গেজমেন্ট',
-        'start_date': 'শুরু তারিখ'
-    }
-}
-
-# Global Brand Database
+# ==================== WORLDWIDE BRAND DATABASE ====================
 BRANDS = {
-    'Global': {
-        'Nike': {
-            'logo': '🏃',
-            'color': '#FF6B6B',
-            'category': 'Sports & Fitness',
-            'rating': 4.8,
-            'campaigns': [
-                {
-                    'id': 'nike1',
-                    'title': 'Nike Run Club Campaign',
-                    'description': 'Create engaging content for Nike Run Club community',
-                    'content_type': 'video',
-                    'base_payment': 250,
-                    'target_reach': 2000,
-                    'per_engagement': 0.8,
-                    'min_engagement': 500,
-                    'deadline': '15 December',
-                    'status': 'active',
-                    'created_content': None
-                }
-            ]
-        },
-        'Apple': {
-            'logo': '🍎',
-            'color': '#3b82f6',
-            'category': 'Technology',
-            'rating': 4.9,
-            'campaigns': [
-                {
-                    'id': 'apple1',
-                    'title': 'iPhone Creator Challenge',
-                    'description': 'Showcase your creativity with iPhone photography',
-                    'content_type': 'static_post',
-                    'base_payment': 300,
-                    'target_reach': 2500,
-                    'per_engagement': 1.0,
-                    'min_engagement': 600,
-                    'deadline': '20 December',
-                    'status': 'active',
-                    'created_content': None
-                }
-            ]
-        },
-        'Spotify': {
-            'logo': '🎵',
-            'color': '#10b981',
-            'category': 'Music & Entertainment',
-            'rating': 4.7,
-            'campaigns': [
-                {
-                    'id': 'spotify1',
-                    'title': 'Spotify Wrapped Campaign',
-                    'description': 'Create content celebrating your Spotify Wrapped',
-                    'content_type': 'text_image',
-                    'base_payment': 200,
-                    'target_reach': 1800,
-                    'per_engagement': 0.6,
-                    'min_engagement': 400,
-                    'deadline': '10 December',
-                    'status': 'active',
-                    'created_content': None
-                }
-            ]
-        }
+    'Technology': {
+        'Apple': {'logo': '🍎', 'color': '#555555', 'rating': 4.9},
+        'Google': {'logo': '🔍', 'color': '#4285f4', 'rating': 4.8},
+        'Microsoft': {'logo': '💻', 'color': '#00a4ef', 'rating': 4.7},
+        'Samsung': {'logo': '📱', 'color': '#1428a0', 'rating': 4.6},
+        'Sony': {'logo': '🎮', 'color': '#000000', 'rating': 4.7},
+        'Dell': {'logo': '🖥️', 'color': '#007db8', 'rating': 4.5},
+        'HP': {'logo': '🖨️', 'color': '#0096d6', 'rating': 4.4},
+        'Lenovo': {'logo': '💻', 'color': '#e2231a', 'rating': 4.3},
+        'Asus': {'logo': '🔧', 'color': '#0068b4', 'rating': 4.5},
+        'Intel': {'logo': '💠', 'color': '#0071c5', 'rating': 4.6},
     },
-    'Asia': {
-        'Samsung': {
-            'logo': '📱',
-            'color': '#8b5cf6',
-            'category': 'Electronics',
-            'rating': 4.6,
-            'campaigns': [
-                {
-                    'id': 'samsung1',
-                    'title': 'Galaxy S24 Ultra Review',
-                    'description': 'Create hands-on review content for Galaxy S24 Ultra',
-                    'content_type': 'video',
-                    'base_payment': 280,
-                    'target_reach': 2200,
-                    'per_engagement': 0.9,
-                    'min_engagement': 550,
-                    'deadline': '25 December',
-                    'status': 'active',
-                    'created_content': None
-                }
-            ]
-        },
-        'Shopee': {
-            'logo': '🛍️',
-            'color': '#f59e0b',
-            'category': 'E-Commerce',
-            'rating': 4.4,
-            'campaigns': [
-                {
-                    'id': 'shopee1',
-                    'title': 'Shopee 12.12 Campaign',
-                    'description': 'Create promotional content for 12.12 Sale',
-                    'content_type': 'text_image',
-                    'base_payment': 180,
-                    'target_reach': 1500,
-                    'per_engagement': 0.5,
-                    'min_engagement': 350,
-                    'deadline': '12 December',
-                    'status': 'active',
-                    'created_content': None
-                }
-            ]
-        }
+    'Fashion & Beauty': {
+        'Nike': {'logo': '🏃', 'color': '#FF6B6B', 'rating': 4.8},
+        'Adidas': {'logo': '👟', 'color': '#000000', 'rating': 4.7},
+        'L\'Oreal': {'logo': '💄', 'color': '#ec4899', 'rating': 4.8},
+        'Gucci': {'logo': '👝', 'color': '#d4af37', 'rating': 4.9},
+        'Prada': {'logo': '👜', 'color': '#000000', 'rating': 4.8},
+        'Zara': {'logo': '👗', 'color': '#8b4513', 'rating': 4.5},
+        'H&M': {'logo': '👔', 'color': '#e50010', 'rating': 4.4},
+        'Uniqlo': {'logo': '👕', 'color': '#c41e3a', 'rating': 4.5},
+        'Levi\'s': {'logo': '👖', 'color': '#1a3a5c', 'rating': 4.6},
+        'Puma': {'logo': '🐆', 'color': '#000000', 'rating': 4.5},
     },
-    'Europe': {
-        'Adidas': {
-            'logo': '👟',
-            'color': '#FF6B6B',
-            'category': 'Sports & Fitness',
-            'rating': 4.7,
-            'campaigns': [
-                {
-                    'id': 'adidas1',
-                    'title': 'Adidas Originals Campaign',
-                    'description': 'Create style content for Adidas Originals',
-                    'content_type': 'static_post',
-                    'base_payment': 260,
-                    'target_reach': 2000,
-                    'per_engagement': 0.75,
-                    'min_engagement': 500,
-                    'deadline': '18 December',
-                    'status': 'active',
-                    'created_content': None
-                }
-            ]
-        },
-        "L'Oreal": {
-            'logo': '💄',
-            'color': '#ec4899',
-            'category': 'Beauty & Cosmetics',
-            'rating': 4.8,
-            'campaigns': [
-                {
-                    'id': 'loreal1',
-                    'title': "L'Oreal Beauty Influencer Campaign",
-                    'description': "Create beauty content featuring L'Oreal products",
-                    'content_type': 'video',
-                    'base_payment': 320,
-                    'target_reach': 2500,
-                    'per_engagement': 1.0,
-                    'min_engagement': 600,
-                    'deadline': '22 December',
-                    'status': 'active',
-                    'created_content': None
-                }
-            ]
-        }
+    'Food & Beverage': {
+        'Coca-Cola': {'logo': '🥤', 'color': '#f40000', 'rating': 4.7},
+        'Pepsi': {'logo': '🥤', 'color': '#004b93', 'rating': 4.6},
+        'Starbucks': {'logo': '☕', 'color': '#006241', 'rating': 4.8},
+        'McDonald\'s': {'logo': '🍔', 'color': '#da291c', 'rating': 4.5},
+        'KFC': {'logo': '🍗', 'color': '#9c1a1a', 'rating': 4.4},
+        'Burger King': {'logo': '👑', 'color': '#d62326', 'rating': 4.3},
+        'Dominos': {'logo': '🍕', 'color': '#006491', 'rating': 4.3},
+        'Nestle': {'logo': '🍫', 'color': '#d71921', 'rating': 4.6},
+        'Unilever': {'logo': '🧴', 'color': '#1f75fe', 'rating': 4.5},
+        'Danone': {'logo': '🥛', 'color': '#0093d0', 'rating': 4.6},
     },
-    'Americas': {
-        'Amazon': {
-            'logo': '📦',
-            'color': '#f59e0b',
-            'category': 'E-Commerce',
-            'rating': 4.5,
-            'campaigns': [
-                {
-                    'id': 'amazon1',
-                    'title': 'Amazon Holiday Gift Guide',
-                    'description': 'Create holiday gift guide content with Amazon products',
-                    'content_type': 'text_image',
-                    'base_payment': 220,
-                    'target_reach': 2000,
-                    'per_engagement': 0.7,
-                    'min_engagement': 450,
-                    'deadline': '20 December',
-                    'status': 'active',
-                    'created_content': None
-                }
-            ]
-        },
-        'Netflix': {
-            'logo': '📺',
-            'color': '#e50914',
-            'category': 'Entertainment',
-            'rating': 4.9,
-            'campaigns': [
-                {
-                    'id': 'netflix1',
-                    'title': 'Netflix Original Series Review',
-                    'description': 'Create content reviewing new Netflix Originals',
-                    'content_type': 'video',
-                    'base_payment': 350,
-                    'target_reach': 2800,
-                    'per_engagement': 1.2,
-                    'min_engagement': 700,
-                    'deadline': '28 December',
-                    'status': 'active',
-                    'created_content': None
-                }
-            ]
-        }
+    'Automotive': {
+        'Tesla': {'logo': '🚗', 'color': '#e82127', 'rating': 4.9},
+        'Toyota': {'logo': '🚙', 'color': '#eb0a1e', 'rating': 4.7},
+        'BMW': {'logo': '🏎️', 'color': '#0066b1', 'rating': 4.8},
+        'Mercedes': {'logo': '⭐', 'color': '#00adef', 'rating': 4.8},
+        'Ford': {'logo': '🚘', 'color': '#003478', 'rating': 4.5},
+        'Honda': {'logo': '🏍️', 'color': '#cc0000', 'rating': 4.6},
+        'Volkswagen': {'logo': '🚐', 'color': '#001e50', 'rating': 4.5},
+        'Hyundai': {'logo': '🚗', 'color': '#002c5f', 'rating': 4.4},
+        'Nissan': {'logo': '🚘', 'color': '#c3002f', 'rating': 4.4},
+        'Audi': {'logo': '🚗', 'color': '#bb0a1e', 'rating': 4.7},
+    },
+    'Entertainment': {
+        'Netflix': {'logo': '📺', 'color': '#e50914', 'rating': 4.9},
+        'Disney': {'logo': '🏰', 'color': '#113ccf', 'rating': 4.8},
+        'Spotify': {'logo': '🎵', 'color': '#1db954', 'rating': 4.7},
+        'YouTube': {'logo': '▶️', 'color': '#ff0000', 'rating': 4.8},
+        'Amazon Prime': {'logo': '📦', 'color': '#00a8e1', 'rating': 4.6},
+        'HBO': {'logo': '🎬', 'color': '#000000', 'rating': 4.7},
+        'TikTok': {'logo': '🎵', 'color': '#000000', 'rating': 4.5},
+        'Instagram': {'logo': '📸', 'color': '#e4405f', 'rating': 4.6},
+        'Snapchat': {'logo': '👻', 'color': '#fffc00', 'rating': 4.3},
+        'Twitch': {'logo': '🎮', 'color': '#6441a5', 'rating': 4.5},
+    },
+    'Finance': {
+        'PayPal': {'logo': '💳', 'color': '#003087', 'rating': 4.6},
+        'Mastercard': {'logo': '💳', 'color': '#eb001b', 'rating': 4.7},
+        'Visa': {'logo': '💳', 'color': '#1a1f71', 'rating': 4.7},
+        'Stripe': {'logo': '💳', 'color': '#635bff', 'rating': 4.8},
+        'Square': {'logo': '💳', 'color': '#00a8e1', 'rating': 4.5},
+        'Revolut': {'logo': '💳', 'color': '#1a1a1a', 'rating': 4.4},
+        'Wise': {'logo': '💳', 'color': '#00b3b3', 'rating': 4.5},
     }
 }
 
+# ==================== GENERATE CAMPAIGNS ====================
+def generate_campaigns():
+    """Generate sample campaigns for all brands"""
+    campaigns = []
+    campaign_id = 1
+    
+    categories = list(BRANDS.keys())
+    
+    for category in categories:
+        for brand_name, brand_data in BRANDS[category].items():
+            # Generate 1-2 campaigns per brand
+            num_campaigns = random.randint(1, 2)
+            
+            content_types = ['video', 'static_post', 'text_image']
+            
+            for i in range(num_campaigns):
+                content_type = random.choice(content_types)
+                
+                # Campaign titles based on content type
+                titles = {
+                    'video': [f'{brand_name} Product Showcase', f'{brand_name} Review', f'{brand_name} Tutorial'],
+                    'static_post': [f'{brand_name} Announcement', f'{brand_name} Promotion', f'{brand_name} Brand Story'],
+                    'text_image': [f'{brand_name} Lifestyle Post', f'{brand_name} Campaign', f'{brand_name} Special Offer']
+                }
+                
+                campaign = {
+                    'id': f'camp_{campaign_id}',
+                    'brand': brand_name,
+                    'category': category,
+                    'title': random.choice(titles[content_type]),
+                    'description': f'Create engaging {content_type.replace("_", " ")} content for {brand_name}',
+                    'content_type': content_type,
+                    'base_payment': random.randint(100, 500),
+                    'target_reach': random.randint(1000, 5000),
+                    'per_engagement': round(random.uniform(0.3, 1.5), 2),
+                    'min_engagement': random.randint(100, 500),
+                    'deadline': (datetime.now() + timedelta(days=random.randint(7, 30))).strftime("%d %b %Y"),
+                    'status': 'active',
+                    'created_content': None,
+                    'brand_logo': brand_data['logo'],
+                    'brand_color': brand_data['color'],
+                    'rating': brand_data['rating']
+                }
+                campaigns.append(campaign)
+                campaign_id += 1
+    
+    return campaigns
+
+# Generate campaigns once
+ALL_CAMPAIGNS = generate_campaigns()
+
+# ==================== HELPER FUNCTIONS ====================
 def get_currency_symbol():
     """Get current currency symbol"""
     return CURRENCIES.get(st.session_state.currency, CURRENCIES['USD'])['symbol']
 
+def get_currency_emoji():
+    """Get current currency emoji"""
+    return CURRENCIES.get(st.session_state.currency, CURRENCIES['USD'])['emoji']
+
 def format_currency(amount):
-    """Format amount in selected currency"""
+    """Format amount in selected currency with proper symbol"""
     symbol = get_currency_symbol()
     rate = CURRENCIES.get(st.session_state.currency, CURRENCIES['USD'])['rate']
     converted = amount * rate
-    return f"{symbol}{converted:.2f}"
+    return f"{symbol}{converted:,.2f}"
 
-def t(key):
-    """Get translation for current language"""
-    lang = st.session_state.language
-    if lang in TRANSLATIONS and key in TRANSLATIONS[lang]:
-        return TRANSLATIONS[lang][key]
-    return TRANSLATIONS['en'].get(key, key)
+def get_language_flag():
+    """Get flag emoji for current language"""
+    return LANGUAGES.get(st.session_state.language, LANGUAGES['en'])['flag']
 
 def get_content_type_name(content_type):
-    """Convert content type code to readable name"""
+    """Convert content type code to display name"""
     names = {
-        'static_post': t('static_post'),
-        'video': t('video'),
-        'text_image': t('text_image')
+        'video': '🎥 Video',
+        'static_post': '🖼️ Static Post',
+        'text_image': '📝 Text + Image'
     }
     return names.get(content_type, content_type)
 
-def generate_ai_content(brand, title, language='en'):
-    """Generate AI content based on brand and language"""
+def generate_ai_content(brand, title):
+    """Generate AI content suggestions"""
     templates = {
-        'en': {
-            'headline': f'{brand} - {title}',
-            'body': 'Special offer! Limited time deal. Order now!',
-            'hashtags': f'#{brand.replace(" ", "")} #SpecialOffer #Deal #LimitedTime'
-        },
-        'bn': {
-            'headline': f'{brand} - {title}',
-            'body': 'বিশেষ অফার! সীমিত সময়ের জন্য সবচেয়ে ভালো দামে পাচ্ছেন। আজই অর্ডার করুন!',
-            'hashtags': f'#{brand.replace(" ", "")} #বিশেষঅফার #ডিল #সীমিতসময়'
-        },
-        'hi': {
-            'headline': f'{brand} - {title}',
-            'body': 'विशेष ऑफर! सीमित समय के लिए। आज ही ऑर्डर करें!',
-            'hashtags': f'#{brand.replace(" ", "")} #स्पेशलऑफर #डील #लिमिटेडटाइम'
-        }
+        'headline': f'🔥 {brand} - {title}',
+        'body': f'🌟 Discover the amazing {title} from {brand}! Limited time offer. Don\'t miss out on this incredible deal. #MustHave',
+        'hashtags': f'#{brand.replace(" ", "")} #Trending #Viral #{title.replace(" ", "")} #DealOfTheDay',
+        'cta': '👉 Click the link in bio to learn more!'
     }
-    
-    return templates.get(language, templates['en'])
+    return templates
 
-def generate_video_script(brand, title, language='en'):
-    """Generate video script in different languages"""
-    scripts = {
-        'en': f'Today we\'re exploring {brand}\'s new product. Perfect combination of taste and health.',
-        'bn': f'আজ আমরা দেখবো {brand} এর নতুন প্রোডাক্ট। স্বাদের সাথে স্বাস্থ্যের পরিপূর্ণ সংমিশ্রণ।',
-        'hi': f'आज हम {brand} के नए उत्पाद की खोज कर रहे हैं। स्वाद और स्वास्थ्य का परिपूर्ण संयोजन।'
-    }
-    return scripts.get(language, scripts['en'])
+def generate_video_script(brand, title):
+    """Generate video script"""
+    return f"""
+    🎬 VIDEO SCRIPT: {brand} - {title}
+    
+    [HOOK - 0-3 seconds]
+    "Hey everyone! Welcome back to the channel!"
+    
+    [INTRO - 3-10 seconds]
+    "Today we're checking out {brand}'s latest {title}. This is something you don't want to miss!"
+    
+    [MAIN CONTENT - 10-45 seconds]
+    "Let me show you why {brand} is changing the game with this incredible product. 
+    The quality is outstanding, and the features are exactly what you need."
+    
+    [CALL TO ACTION - 45-60 seconds]
+    "Make sure to check the link in description to get yours! Don't forget to like and subscribe!"
+    """
 
 def add_notification(message, type='info'):
     """Add notification to session state"""
-    st.session_state.notifications.append({
+    st.session_state.notifications.insert(0, {
         'message': message,
         'type': type,
-        'time': datetime.now().strftime("%H:%M")
+        'time': datetime.now().strftime("%I:%M %p"),
+        'date': datetime.now().strftime("%b %d")
     })
+    # Keep only last 50 notifications
+    st.session_state.notifications = st.session_state.notifications[:50]
 
+def get_brand_color(brand_name):
+    """Get brand color from database"""
+    for category in BRANDS.values():
+        if brand_name in category:
+            return category[brand_name]['color']
+    return '#667eea'
+
+def get_brand_logo(brand_name):
+    """Get brand logo from database"""
+    for category in BRANDS.values():
+        if brand_name in category:
+            return category[brand_name]['logo']
+    return '🏢'
+
+def get_campaign_by_id(campaign_id):
+    """Get campaign by ID"""
+    for campaign in ALL_CAMPAIGNS:
+        if campaign['id'] == campaign_id:
+            return campaign
+    return None
+
+# ==================== DASHBOARD ====================
 def show_dashboard():
-    """Show main dashboard"""
+    """Main Dashboard View"""
+    
+    # Header
     st.markdown(f"""
     <div class="main-header">
-        <h1>💰 {t('app_name')} - {t('tagline')}</h1>
-        <p>{t('recent_activity')}</p>
+        <h1>🌍 CollabNet</h1>
+        <p>Connect with brands worldwide • Create amazing content • Earn globally</p>
+        <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+            <span class="badge badge-info">👋 Welcome, {st.session_state.user_name}</span>
+            <span class="badge badge-success">⭐ {st.session_state.user_level} Creator</span>
+            <span class="badge badge-warning">{get_currency_emoji()} {st.session_state.currency}</span>
+            <span class="badge badge-info">{get_language_flag()} {LANGUAGES[st.session_state.language]['name']}</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Stats Cards
+    # Stats Row
     col1, col2, col3, col4 = st.columns(4)
+    
+    active_count = len([c for c in st.session_state.active_campaigns if c.get('status') != 'completed'])
+    completed_count = len(st.session_state.completed_campaigns)
+    total_earned = sum(c.get('estimated_earning', 0) for c in st.session_state.completed_campaigns)
+    total_reach = sum(c.get('current_reach', 0) for c in st.session_state.active_campaigns + st.session_state.completed_campaigns)
     
     with col1:
         st.markdown(f"""
-        <div class="earning-card">
-            <h3>{t('balance')}</h3>
-            <h2>{format_currency(st.session_state.balance)}</h2>
-            <p>{t('total_earnings')}</p>
+        <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-value">{format_currency(st.session_state.balance)}</div>
+            <div class="stat-label">Available Balance</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
-        active_count = len([c for c in st.session_state.active_campaigns if c['status'] != 'completed'])
         st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 20px; border-radius: 15px;">
-            <h3>{t('active_campaigns')}</h3>
-            <h2>{active_count}</h2>
-            <p>{t('quick_actions')}</p>
+        <div class="stat-card">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-value">{active_count}</div>
+            <div class="stat-label">Active Campaigns</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col3:
-        completed_count = len(st.session_state.completed_campaigns)
         st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 20px; border-radius: 15px;">
-            <h3>{t('completed_campaigns')}</h3>
-            <h2>{completed_count}</h2>
-            <p>{t('total_campaigns')}</p>
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value">{completed_count}</div>
+            <div class="stat-label">Completed</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col4:
-        total_earning = sum(c.get('estimated_earning', 0) for c in st.session_state.completed_campaigns)
         st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 20px; border-radius: 15px;">
-            <h3>{t('total_earnings')}</h3>
-            <h2>{format_currency(total_earning)}</h2>
-            <p>{t('estimated_earning')}</p>
+        <div class="stat-card">
+            <div class="stat-icon">📈</div>
+            <div class="stat-value">{format_currency(total_earned)}</div>
+            <div class="stat-label">Total Earned</div>
         </div>
         """, unsafe_allow_html=True)
     
-    st.markdown("---")
+    st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
     
     # Quick Actions
-    st.subheader(f"⚡ {t('quick_actions')}")
+    st.subheader("⚡ Quick Actions")
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button(f"🏢 {t('browse_brands')}", use_container_width=True):
+        if st.button("🏢 Find Brands & Campaigns", use_container_width=True, type="primary"):
             st.session_state.page = "marketplace"
             st.rerun()
     
     with col2:
-        if st.button(f"🎨 {t('create_content')}", use_container_width=True):
-            st.session_state.page = "create_content"
+        if st.button("🎨 Create Content", use_container_width=True, type="secondary"):
+            st.session_state.page = "create"
             st.rerun()
     
     with col3:
-        if st.button(f"📊 {t('view_performance')}", use_container_width=True):
-            st.session_state.page = "performance"
+        if st.button("📊 View Analytics", use_container_width=True, type="secondary"):
+            st.session_state.page = "analytics"
             st.rerun()
     
-    st.markdown("---")
+    st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
     
     # Recent Activity
-    st.subheader(f"📝 {t('recent_activity')}")
+    st.subheader("📝 Recent Activity")
     
     if not st.session_state.active_campaigns and not st.session_state.completed_campaigns:
-        st.info(f"ℹ️ {t('no_active_campaigns')}")
-    
+        st.info("👋 Welcome to CollabNet! Start by browsing brands and accepting your first campaign.")
+        if st.button("🚀 Get Started - Browse Campaigns"):
+            st.session_state.page = "marketplace"
+            st.rerun()
     else:
-        # Show active campaigns
+        # Active campaigns
         if st.session_state.active_campaigns:
-            st.markdown(f"#### 🎯 {t('active_campaigns')}")
-            for campaign in st.session_state.active_campaigns[-3:]:
-                status_text = "Content needed" if campaign['status'] == 'content_pending' else "Posted"
-                status_color = "#f59e0b" if campaign['status'] == 'content_pending' else "#10b981"
+            st.markdown("#### 🎯 Your Active Campaigns")
+            for campaign in st.session_state.active_campaigns[:3]:
+                status = campaign.get('status', 'pending')
+                status_text = "⏳ Pending" if status == 'content_pending' else "✅ Posted"
+                status_color = "#f59e0b" if status == 'content_pending' else "#10b981"
                 
-                st.markdown(f"""
-                <div style="
-                    background: white;
-                    border-radius: 10px;
-                    padding: 15px;
-                    margin: 10px 0;
-                    border-left: 4px solid {status_color};
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                ">
-                    <h4>{campaign['brand']} - {campaign['title']}</h4>
-                    <p><strong>{t('status')}:</strong> <span style="color: {status_color}">{status_text}</span></p>
-                    <p><strong>{t('estimated_earning')}:</strong> {format_currency(campaign.get('estimated_earning', 0))}</p>
-                    <p><strong>{t('deadline')}:</strong> {campaign.get('deadline', '15 December')}</p>
-                </div>
-                """, unsafe_allow_html=True)
+                with st.container():
+                    st.markdown(f"""
+                    <div style="background: white; border-radius: 12px; padding: 18px; margin: 10px 0; border-left: 4px solid {status_color}; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                            <div>
+                                <strong>{campaign.get('brand', 'Brand')}</strong> - {campaign.get('title', 'Campaign')}
+                                <span class="badge { 'badge-warning' if status == 'content_pending' else 'badge-success' }">{status_text}</span>
+                            </div>
+                            <div>
+                                <span style="font-size: 0.9rem; color: #6b7280;">
+                                    💰 {format_currency(campaign.get('estimated_earning', 0))}
+                                </span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 20px; margin-top: 10px; flex-wrap: wrap; font-size: 0.9rem; color: #6b7280;">
+                            <span>📅 Deadline: {campaign.get('deadline', 'N/A')}</span>
+                            <span>📊 Type: {get_content_type_name(campaign.get('content_type', ''))}</span>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
         
-        # Show completed campaigns
+        # Completed campaigns
         if st.session_state.completed_campaigns:
-            st.markdown(f"#### ✅ {t('completed_campaigns')}")
-            for campaign in st.session_state.completed_campaigns[-3:]:
-                st.markdown(f"""
-                <div style="
-                    background: white;
-                    border-radius: 10px;
-                    padding: 15px;
-                    margin: 10px 0;
-                    border-left: 4px solid #10b981;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                ">
-                    <h4>{campaign['brand']} - {campaign['title']}</h4>
-                    <p><strong>{t('estimated_earning')}:</strong> {format_currency(campaign.get('actual_earning', campaign.get('estimated_earning', 0)))}</p>
-                    <p><strong>{t('reach')}:</strong> {campaign.get('actual_reach', 0)}</p>
-                    <p><strong>{t('status')}:</strong> {campaign.get('completed_date', 'N/A')}</p>
-                </div>
-                """, unsafe_allow_html=True)
+            st.markdown("#### ✅ Recently Completed")
+            for campaign in st.session_state.completed_campaigns[:2]:
+                with st.container():
+                    st.markdown(f"""
+                    <div style="background: #f8fafc; border-radius: 12px; padding: 15px; margin: 8px 0; border-left: 4px solid #10b981;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                            <div>
+                                <strong>{campaign.get('brand', 'Brand')}</strong> - {campaign.get('title', 'Campaign')}
+                                <span class="badge badge-success">✅ Done</span>
+                            </div>
+                            <div>
+                                <span style="font-weight: 600; color: #10b981;">Earned: {format_currency(campaign.get('estimated_earning', 0))}</span>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
+# ==================== MARKETPLACE ====================
 def show_marketplace():
-    """Show brand marketplace with global brands"""
-    st.title(f"🏢 {t('brand_marketplace')}")
+    """Brand Marketplace View"""
     
-    # Region and Language Settings
-    col1, col2, col3 = st.columns(3)
+    st.title("🏢 Global Brand Marketplace")
+    st.caption("Discover and connect with brands from around the world")
+    
+    # Filters
+    col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
     
     with col1:
-        region_filter = st.selectbox(
-            "🌍 Region Filter",
-            ["Global", "Asia", "Europe", "Americas", "All Regions"]
-        )
+        search_query = st.text_input("🔍 Search Brands", placeholder="Search by brand or category...")
     
     with col2:
-        search_query = st.text_input(f"🔍 {t('search_brand')}", "")
+        category_filter = st.selectbox(
+            "📂 Category",
+            ["All Categories"] + list(BRANDS.keys())
+        )
     
     with col3:
         content_filter = st.selectbox(
-            f"📱 {t('content_type_filter')}",
-            [t('all'), t('video'), t('static_post'), t('text_image')]
+            "📱 Content Type",
+            ["All Types", "Video", "Static Post", "Text + Image"]
         )
     
-    st.markdown("---")
+    with col4:
+        price_filter = st.selectbox(
+            "💰 Budget",
+            ["All", "Under $200", "$200-$500", "Above $500"]
+        )
     
-    # Display Brands based on region
-    for region, brands in BRANDS.items():
-        if region_filter != "All Regions" and region_filter != region:
+    st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+    
+    # Display campaigns
+    filtered_campaigns = []
+    
+    for campaign in ALL_CAMPAIGNS:
+        if campaign['status'] != 'active':
             continue
-            
-        st.subheader(f"🌍 {region}")
         
-        for brand_name, brand_data in brands.items():
-            # Apply search filter
-            if search_query and search_query.lower() not in f"{brand_name} {brand_data['category']}".lower():
-                continue
-                
-            st.markdown(f"""
-            <div style="
-                background: {brand_data['color']}20;
-                padding: 20px;
-                border-radius: 15px;
-                margin: 20px 0;
-                border-left: 5px solid {brand_data['color']};
-            ">
-                <h2>{brand_data['logo']} {brand_name}</h2>
-                <p><strong>{t('brand')}:</strong> {brand_data['category']} | <strong>Rating:</strong> {brand_data['rating']} ⭐</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Show campaigns for this brand
-            for campaign in brand_data['campaigns']:
-                if campaign['status'] == 'active':
-                    # Apply content type filter
-                    content_type_name = get_content_type_name(campaign['content_type'])
-                    if content_filter != t('all') and content_filter != content_type_name:
-                        continue
-                    
-                    display_campaign_card(brand_name, brand_data, campaign)
-
-def display_campaign_card(brand_name, brand_data, campaign):
-    """Display individual campaign card with multi-currency support"""
-    col1, col2, col3 = st.columns([3, 1, 1])
-    
-    with col1:
-        max_earning = campaign['base_payment'] + (campaign['target_reach'] * campaign['per_engagement'])
-        st.markdown(f"""
-        <div class="campaign-card">
-            <h3>{campaign['title']}</h3>
-            <p>{campaign['description']}</p>
-            
-            <div style="display: flex; gap: 20px; margin-top: 15px; flex-wrap: wrap;">
-                <div>
-                    <strong>{t('content_type_filter')}:</strong><br>
-                    {get_content_type_name(campaign['content_type'])}
-                </div>
-                <div>
-                    <strong>{t('estimated_earning')}:</strong><br>
-                    {format_currency(campaign['base_payment'])}
-                </div>
-                <div>
-                    <strong>{t('reach')}:</strong><br>
-                    {campaign['target_reach']}
-                </div>
-                <div>
-                    <strong>Min Engagement:</strong><br>
-                    {campaign['min_engagement']}
-                </div>
-            </div>
-            
-            <div style="margin-top: 15px;">
-                <strong>Payment Structure:</strong><br>
-                • Base: {format_currency(campaign['base_payment'])}<br>
-                • Per Engagement: {format_currency(campaign['per_engagement'])}<br>
-                • Max Earning: {format_currency(max_earning)}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown(f"#### 📅 {t('deadline')}")
-        st.markdown(f"**{campaign['deadline']}**")
+        # Apply filters
+        if search_query and search_query.lower() not in campaign['brand'].lower() and search_query.lower() not in campaign['category'].lower():
+            continue
         
-        st.markdown(f"#### ⏱️ {t('days_left')}")
-        days_left = random.randint(3, 14)
-        st.markdown(f"**{days_left} {t('days_left')}**")
-    
-    with col3:
+        if category_filter != "All Categories" and campaign['category'] != category_filter:
+            continue
+        
+        content_map = {"Video": "video", "Static Post": "static_post", "Text + Image": "text_image"}
+        if content_filter != "All Types" and campaign['content_type'] != content_map.get(content_filter):
+            continue
+        
         # Check if already accepted
         already_accepted = any(
-            c['campaign_id'] == campaign['id'] 
+            c.get('campaign_id') == campaign['id'] 
             for c in st.session_state.active_campaigns + st.session_state.completed_campaigns
         )
         
-        if not already_accepted:
-            if st.button(f"✅ {t('accept_campaign')}", key=f"accept_{campaign['id']}", use_container_width=True):
-                # Add to active campaigns
-                st.session_state.active_campaigns.append({
-                    'campaign_id': campaign['id'],
-                    'brand': brand_name,
-                    'title': campaign['title'],
-                    'content_type': campaign['content_type'],
-                    'base_payment': campaign['base_payment'],
-                    'target_reach': campaign['target_reach'],
-                    'min_engagement': campaign['min_engagement'],
-                    'per_engagement': campaign['per_engagement'],
-                    'deadline': campaign['deadline'],
-                    'accepted_date': datetime.now().strftime("%d %b %Y"),
-                    'status': 'content_pending',
-                    'created_content': None,
-                    'current_reach': 0,
-                    'current_engagement': 0,
-                    'estimated_earning': 0
-                })
-                add_notification(f"✅ '{campaign['title']}' campaign accepted!", 'success')
-                st.success(f"✅ '{campaign['title']}' {t('accept_campaign')}!")
-                time.sleep(1)
-                st.rerun()
-        else:
-            st.info(f"⏳ {t('already_accepted')}")
+        if already_accepted:
+            continue
         
-        # Quick Stats
-        st.markdown("---")
-        st.markdown("#### 📊 Stats")
-        st.markdown(f"""
-        <small>
-        • Accepted: {random.randint(50, 200)} creators<br>
-        • Successful: {random.randint(30, 80)} creators<br>
-        • Avg Earning: {format_currency(campaign['base_payment'] + random.randint(20, 80))}
-        </small>
-        """, unsafe_allow_html=True)
+        filtered_campaigns.append(campaign)
     
-    st.markdown("---")
+    # Show results
+    if not filtered_campaigns:
+        st.info("🔍 No campaigns match your filters. Try adjusting your search criteria.")
+        return
+    
+    st.write(f"**{len(filtered_campaigns)}** campaigns available")
+    
+    # Display campaigns in grid
+    for campaign in filtered_campaigns:
+        with st.container():
+            col1, col2, col3 = st.columns([3, 1, 1])
+            
+            with col1:
+                brand_color = campaign.get('brand_color', '#667eea')
+                brand_logo = campaign.get('brand_logo', '🏢')
+                
+                max_earning = campaign['base_payment'] + (campaign['target_reach'] * campaign['per_engagement'])
+                
+                st.markdown(f"""
+                <div class="campaign-card" style="background: linear-gradient(135deg, {brand_color}80 0%, {brand_color}40 100%);">
+                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                        <div style="font-size: 3rem;">{brand_logo}</div>
+                        <div>
+                            <h3 style="margin: 0; color: white;">{campaign['brand']}</h3>
+                            <p style="margin: 5px 0; color: rgba(255,255,255,0.9);">{campaign['category']}</p>
+                        </div>
+                        <div style="margin-left: auto;">
+                            <span class="badge badge-info">⭐ {campaign['rating']}</span>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin-top: 15px; color: white;">{campaign['title']}</h4>
+                    <p style="color: rgba(255,255,255,0.9);">{campaign['description']}</p>
+                    
+                    <div style="display: flex; gap: 20px; margin-top: 15px; flex-wrap: wrap; color: rgba(255,255,255,0.9);">
+                        <div>
+                            <strong>📱 Content</strong><br>
+                            {get_content_type_name(campaign['content_type'])}
+                        </div>
+                        <div>
+                            <strong>💰 Base Pay</strong><br>
+                            {format_currency(campaign['base_payment'])}
+                        </div>
+                        <div>
+                            <strong>🎯 Target Reach</strong><br>
+                            {campaign['target_reach']:,}
+                        </div>
+                        <div>
+                            <strong>⚡ Min Engagement</strong><br>
+                            {campaign['min_engagement']}
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.15); border-radius: 10px; color: white;">
+                        <strong>💰 Payment Structure:</strong><br>
+                        Base {format_currency(campaign['base_payment'])} + {format_currency(campaign['per_engagement'])} per engagement<br>
+                        <strong>Max Earning: {format_currency(max_earning)}</strong>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown(f"""
+                <div style="background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                    <p style="margin: 0; font-weight: 600;">📅 Deadline</p>
+                    <p style="margin: 5px 0; font-size: 1.1rem;">{campaign['deadline']}</p>
+                    <p style="margin: 10px 0 0 0; font-size: 0.9rem; color: #6b7280;">
+                        ⏱️ {random.randint(5, 20)} days left
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col3:
+                if st.button(f"✅ Apply Now", key=f"apply_{campaign['id']}", use_container_width=True, type="primary"):
+                    # Add to active campaigns
+                    campaign_copy = campaign.copy()
+                    campaign_copy['accepted_date'] = datetime.now().strftime("%d %b %Y")
+                    campaign_copy['status'] = 'content_pending'
+                    campaign_copy['current_reach'] = 0
+                    campaign_copy['current_engagement'] = 0
+                    campaign_copy['estimated_earning'] = 0
+                    
+                    st.session_state.active_campaigns.append(campaign_copy)
+                    
+                    add_notification(f"✅ Applied to {campaign['brand']} - {campaign['title']}", 'success')
+                    st.success(f"✅ Successfully applied to {campaign['brand']} campaign!")
+                    time.sleep(1)
+                    st.rerun()
+                
+                # Show stats
+                st.markdown(f"""
+                <div style="background: white; padding: 12px; border-radius: 10px; margin-top: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                    <p style="margin: 0; font-size: 0.85rem; color: #6b7280;">
+                        📊 {random.randint(50, 200)} creators applied<br>
+                        ⭐ {random.randint(80, 95)}% satisfaction rate
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
 
-def create_content():
-    """Create content for campaigns"""
-    st.title(f"🎨 {t('create_content')}")
+# ==================== CONTENT CREATION ====================
+def show_content_creation():
+    """Content Creation View"""
     
-    if not st.session_state.active_campaigns:
-        st.info(f"📭 {t('no_active_campaigns')}")
-        if st.button(f"🏢 {t('browse_brands')}"):
+    st.title("🎨 Create Content")
+    st.caption("Use AI-powered tools to create amazing content for your campaigns")
+    
+    # Get campaigns that need content
+    pending_campaigns = [c for c in st.session_state.active_campaigns if c.get('status') == 'content_pending']
+    
+    if not pending_campaigns:
+        st.success("🎉 You've created content for all your active campaigns!")
+        st.info("💡 Apply to new campaigns from the marketplace to create more content.")
+        
+        if st.button("🏢 Browse Marketplace", type="primary"):
             st.session_state.page = "marketplace"
             st.rerun()
         return
     
-    # Select campaign to create content for
-    pending_campaigns = [c for c in st.session_state.active_campaigns if c['status'] == 'content_pending']
-    
-    if not pending_campaigns:
-        st.success("✅ All your campaigns have content created!")
-        return
-    
+    # Select campaign
     campaign_options = {f"{c['brand']} - {c['title']}": c for c in pending_campaigns}
-    selected_campaign_name = st.selectbox(
-        f"{t('create_content_for')}:",
+    selected_key = st.selectbox(
+        "📋 Select Campaign to work on",
         list(campaign_options.keys())
     )
     
-    selected_campaign = campaign_options[selected_campaign_name]
+    campaign = campaign_options[selected_key]
     
-    # Get brand data (handle case where brand might not exist in BRANDS)
-    brand_color = '#3b82f6'
-    brand_logo = '🏢'
-    for region in BRANDS.values():
-        if selected_campaign['brand'] in region:
-            brand_color = region[selected_campaign['brand']]['color']
-            brand_logo = region[selected_campaign['brand']]['logo']
-            break
-    
+    # Display campaign info
     st.markdown(f"""
-    <div class="brand-card" style="border-left-color: {brand_color};">
-        <h3>{brand_logo} {selected_campaign['brand']}</h3>
-        <h4>{selected_campaign['title']}</h4>
-        <p><strong>{t('content_type_filter')}:</strong> {get_content_type_name(selected_campaign['content_type'])}</p>
-        <p><strong>{t('estimated_earning')}:</strong> {format_currency(selected_campaign['base_payment'])}</p>
-        <p><strong>{t('reach')}:</strong> {selected_campaign['target_reach']} | <strong>Min Engagement:</strong> {selected_campaign['min_engagement']}</p>
-        <p><strong>{t('deadline')}:</strong> {selected_campaign.get('deadline', '15 December')}</p>
+    <div style="background: white; border-radius: 12px; padding: 20px; margin: 15px 0; border-left: 5px solid {get_brand_color(campaign['brand'])}; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <div style="font-size: 3rem;">{get_brand_logo(campaign['brand'])}</div>
+            <div>
+                <h3 style="margin: 0;">{campaign['brand']}</h3>
+                <p style="margin: 5px 0; color: #6b7280;">{campaign['title']}</p>
+            </div>
+            <div style="margin-left: auto;">
+                <span class="badge badge-info">{get_content_type_name(campaign['content_type'])}</span>
+                <span class="badge badge-warning">💰 {format_currency(campaign['base_payment'])}</span>
+            </div>
+        </div>
+        <div style="display: flex; gap: 20px; margin-top: 15px; flex-wrap: wrap; font-size: 0.9rem; color: #6b7280;">
+            <span>🎯 Target Reach: {campaign['target_reach']:,}</span>
+            <span>⚡ Min Engagement: {campaign['min_engagement']}</span>
+            <span>📅 Deadline: {campaign['deadline']}</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("---")
+    st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
     
-    # Content Creation Based on Type
-    content_type = selected_campaign['content_type']
+    # Content creation based on type
+    content_type = campaign['content_type']
     
-    if content_type == 'static_post':
-        create_static_post_content(selected_campaign)
-    elif content_type == 'video':
-        create_video_content(selected_campaign)
+    if content_type == 'video':
+        create_video_content(campaign)
+    elif content_type == 'static_post':
+        create_static_content(campaign)
     elif content_type == 'text_image':
-        create_text_image_content(selected_campaign)
-
-def create_static_post_content(campaign):
-    """Create static post content"""
-    st.subheader("🖼️ Create Static Post")
-    
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        st.markdown("#### 1. Create/Upload Image")
-        image_option = st.radio(
-            "Image Option",
-            ["AI Generate", "Upload", "Use Template"]
-        )
-        
-        if image_option == "AI Generate":
-            prompt = st.text_area("AI Prompt", 
-                                 f"{campaign['brand']} - {campaign['title']} - Engaging social media post")
-            if st.button("🖼️ Generate AI Image"):
-                st.info("AI Image generating... (Demo)")
-                st.image("https://via.placeholder.com/600x400/3b82f6/ffffff?text=AI+Generated+Post", 
-                        caption="AI Generated Image")
-        
-        elif image_option == "Upload":
-            uploaded_file = st.file_uploader("Upload Image", type=['jpg', 'png', 'jpeg'])
-            if uploaded_file:
-                st.image(uploaded_file, caption="Uploaded Image")
-        
-        else:  # Template
-            template = st.selectbox("Select Template", ["Design 1", "Design 2", "Design 3"])
-            st.image(f"https://via.placeholder.com/600x400/3b82f6/ffffff?text={campaign['brand']}+{template}", 
-                    caption=f"{template} Template")
-    
-    with col2:
-        st.markdown("#### 2. Text Content")
-        
-        # AI Text Generation
-        if st.button("🤖 Generate AI Text"):
-            generated_text = generate_ai_content(campaign['brand'], campaign['title'], st.session_state.language)
-            st.session_state.generated_text = generated_text
-        
-        if 'generated_text' in st.session_state:
-            headline = st.text_input("Headline", st.session_state.generated_text['headline'])
-            body = st.text_area("Body Text", st.session_state.generated_text['body'], height=150)
-            hashtags = st.text_input("Hashtags", st.session_state.generated_text['hashtags'])
-        else:
-            headline = st.text_input("Headline", f"{campaign['brand']} - {campaign['title']}")
-            body = st.text_area("Body Text", "Special offer! Limited time deal...", height=150)
-            hashtags = st.text_input("Hashtags", f"#{campaign['brand'].replace(' ', '')} #Deal #SpecialOffer")
-        
-        st.markdown("#### 3. Platforms")
-        platforms = st.multiselect(
-            "Post to Platforms",
-            ["Facebook", "Instagram", "Twitter/X", "LinkedIn", "TikTok", "YouTube"],
-            default=["Facebook", "Instagram"]
-        )
-    
-    st.markdown("---")
-    
-    # Preview and Submit
-    st.subheader("👁️ Post Preview")
-    
-    preview_col1, preview_col2 = st.columns([2, 1])
-    
-    with preview_col1:
-        st.markdown(f"""
-        <div style="
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 20px;
-            background: white;
-            margin: 10px 0;
-        ">
-            <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                <div style="
-                    width: 40px;
-                    height: 40px;
-                    background: #3b82f6;
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: white;
-                    font-size: 1.5rem;
-                    margin-right: 10px;
-                ">👤</div>
-                <div>
-                    <strong>Your Page</strong><br>
-                    <small>Sponsored • Just now</small>
-                </div>
-            </div>
-            
-            <p><strong>{headline}</strong></p>
-            <p>{body}</p>
-            
-            <div style="
-                background: #f3f4f6;
-                height: 300px;
-                border-radius: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: #6b7280;
-                margin: 15px 0;
-            ">
-                🖼️ Post Image
-            </div>
-            
-            <p><small>{hashtags}</small></p>
-            
-            <div style="display: flex; gap: 20px; color: #6b7280; margin-top: 15px;">
-                <span>❤️ Like</span>
-                <span>💬 Comment</span>
-                <span>🔄 Share</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with preview_col2:
-        st.markdown("#### 📊 Estimated Performance")
-        
-        estimated_reach = random.randint(300, 1200)
-        estimated_engagement = random.randint(50, 400)
-        
-        st.metric("Estimated Reach", f"{estimated_reach}")
-        st.metric("Estimated Engagement", f"{estimated_engagement}")
-        
-        # Calculate estimated earning
-        base_earning = campaign['base_payment'] if estimated_engagement >= campaign['min_engagement'] else 0
-        engagement_earning = estimated_engagement * campaign['per_engagement']
-        total_estimated = base_earning + engagement_earning
-        
-        st.metric("Estimated Earning", f"{format_currency(total_estimated)}")
-        
-        if st.button("✅ Submit Content", type="primary", use_container_width=True):
-            # Update campaign
-            for i, c in enumerate(st.session_state.active_campaigns):
-                if c['campaign_id'] == campaign['campaign_id']:
-                    st.session_state.active_campaigns[i]['status'] = 'posted'
-                    st.session_state.active_campaigns[i]['created_content'] = {
-                        'headline': headline,
-                        'body': body,
-                        'hashtags': hashtags,
-                        'platforms': platforms,
-                        'created_date': datetime.now().strftime("%d %b %Y, %I:%M %p")
-                    }
-                    st.session_state.active_campaigns[i]['current_reach'] = estimated_reach
-                    st.session_state.active_campaigns[i]['current_engagement'] = estimated_engagement
-                    st.session_state.active_campaigns[i]['estimated_earning'] = total_estimated
-            
-            # Add to content created
-            st.session_state.content_created.append({
-                'campaign_id': campaign['campaign_id'],
-                'brand': campaign['brand'],
-                'title': campaign['title'],
-                'content_type': campaign['content_type'],
-                'content': {'headline': headline, 'body': body, 'hashtags': hashtags},
-                'created_date': datetime.now().strftime("%d %b %Y, %I:%M %p"),
-                'estimated_earning': total_estimated
-            })
-            
-            add_notification(f"✅ '{campaign['title']}' content submitted!", 'success')
-            st.success("✅ Content submitted! Performance tracking started.")
-            st.balloons()
-            time.sleep(2)
-            st.rerun()
+        create_text_image_content(campaign)
 
 def create_video_content(campaign):
-    """Create video content section"""
+    """Video content creation form"""
     st.subheader("🎥 Create Video Content")
     
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.markdown("#### 1. Video Script")
+        # Script generation
+        st.markdown("#### 📝 Video Script")
         
-        if st.button("🤖 Generate AI Script"):
-            script = generate_video_script(campaign['brand'], campaign['title'], st.session_state.language)
-            st.session_state.video_script = script
+        if st.button("🤖 Generate AI Script", use_container_width=True):
+            script = generate_video_script(campaign['brand'], campaign['title'])
+            st.session_state['script'] = script
         
-        if 'video_script' in st.session_state:
-            script_text = st.text_area("Script", st.session_state.video_script, height=200)
-        else:
-            script_text = st.text_area("Script", f"Video script for {campaign['brand']}'s {campaign['title']}...", height=200)
+        default_script = generate_video_script(campaign['brand'], campaign['title'])
+        script = st.text_area(
+            "Your Script",
+            value=st.session_state.get('script', default_script),
+            height=250,
+            help="Write your video script here or use AI to generate one"
+        )
         
-        st.markdown("#### 2. Video Settings")
+        # Video settings
+        st.markdown("#### ⚙️ Video Settings")
         
-        duration = st.slider("Video Duration (seconds)", 15, 60, 30)
-        aspect_ratio = st.selectbox("Aspect Ratio", ["9:16 (Reels/TikTok)", "1:1 (Instagram)", "16:9 (YouTube)"])
-        music = st.selectbox("Background Music", ["Upbeat", "Calm", "Trending", "No Music"])
-        voiceover = st.selectbox("Voiceover", ["Male (English)", "Female (English)", "Male (Local)", "Female (Local)", "No Voiceover"])
+        col_a, col_b = st.columns(2)
+        with col_a:
+            duration = st.slider("Duration (seconds)", 15, 120, 45)
+            aspect_ratio = st.selectbox(
+                "Aspect Ratio",
+                ["9:16 (Vertical)", "16:9 (Horizontal)", "1:1 (Square)"]
+            )
+        with col_b:
+            music = st.selectbox(
+                "Background Music",
+                ["Upbeat", "Calm", "Energetic", "Corporate", "No Music"]
+            )
+            voiceover = st.selectbox(
+                "Voiceover Style",
+                ["Professional", "Casual", "Enthusiastic", "No Voiceover"]
+            )
     
     with col2:
-        st.markdown("#### 3. Media Upload")
+        st.markdown("#### 📁 Media Upload")
         
         uploaded_files = st.file_uploader(
-            "Upload Images/Videos",
-            type=['jpg', 'png', 'mp4', 'mov'],
+            "Upload B-Roll or Clips",
+            type=['mp4', 'mov', 'jpg', 'png'],
             accept_multiple_files=True
         )
         
         if uploaded_files:
-            st.success(f"{len(uploaded_files)} files uploaded")
+            st.success(f"✅ {len(uploaded_files)} files uploaded")
+            for file in uploaded_files:
+                st.markdown(f"• {file.name}")
         
-        st.markdown("#### 4. AI Video Generation")
+        st.markdown("#### 🎬 AI Video Generation")
         
-        if st.button("🎬 Generate AI Video"):
-            st.info("AI Video generating... (Demo)")
-            st.markdown("""
-            <div style="
-                background: linear-gradient(45deg, #667eea, #764ba2);
-                height: 300px;
-                border-radius: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: white;
-                font-size: 1.5rem;
-                margin: 15px 0;
-            ">
-                🎥 AI Generated Video Preview
-            </div>
-            """, unsafe_allow_html=True)
+        if st.button("🎬 Generate AI Video", use_container_width=True):
+            with st.spinner("AI is generating your video..."):
+                time.sleep(2)
+                st.success("✅ Video generated successfully!")
+                st.video("https://sample-videos.com/video321/mp4/240/big_buck_bunny_240p_1mb.mp4")
+    
+    # Preview & Submit
+    st.markdown("---")
+    st.subheader("📊 Estimated Performance")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    estimated_reach = random.randint(campaign['target_reach'] - 500, campaign['target_reach'] + 1000)
+    estimated_engagement = random.randint(campaign['min_engagement'], campaign['min_engagement'] * 2)
+    
+    base_earning = campaign['base_payment'] if estimated_engagement >= campaign['min_engagement'] else 0
+    engagement_earning = estimated_engagement * campaign['per_engagement']
+    total_estimated = base_earning + engagement_earning
+    
+    with col1:
+        st.metric("📊 Estimated Reach", f"{estimated_reach:,}")
+    with col2:
+        st.metric("💬 Estimated Engagement", f"{estimated_engagement:,}")
+    with col3:
+        st.metric("💰 Estimated Earnings", format_currency(total_estimated))
+    
+    if st.button("✅ Submit Video Content", type="primary", use_container_width=True):
+        # Update campaign
+        for i, c in enumerate(st.session_state.active_campaigns):
+            if c['id'] == campaign['id']:
+                st.session_state.active_campaigns[i]['status'] = 'posted'
+                st.session_state.active_campaigns[i]['created_content'] = {
+                    'type': 'video',
+                    'script': script,
+                    'duration': duration,
+                    'aspect_ratio': aspect_ratio,
+                    'music': music,
+                    'voiceover': voiceover,
+                    'submitted_at': datetime.now().strftime("%d %b %Y, %I:%M %p")
+                }
+                st.session_state.active_campaigns[i]['current_reach'] = estimated_reach
+                st.session_state.active_campaigns[i]['current_engagement'] = estimated_engagement
+                st.session_state.active_campaigns[i]['estimated_earning'] = total_estimated
         
-        # Preview and Submit
-        st.markdown("---")
-        st.markdown("#### 📊 Estimated Performance")
-        
-        estimated_reach = random.randint(300, 1500)
-        estimated_engagement = random.randint(50, 500)
-        
-        st.metric("Estimated Reach", f"{estimated_reach}")
-        st.metric("Estimated Engagement", f"{estimated_engagement}")
-        
-        # Calculate estimated earning
-        base_earning = campaign['base_payment'] if estimated_engagement >= campaign['min_engagement'] else 0
-        engagement_earning = estimated_engagement * campaign['per_engagement']
-        total_estimated = base_earning + engagement_earning
-        
-        st.metric("Estimated Earning", f"{format_currency(total_estimated)}")
-        
-        if st.button("✅ Submit Video", type="primary", use_container_width=True):
-            # Update campaign
-            for i, c in enumerate(st.session_state.active_campaigns):
-                if c['campaign_id'] == campaign['campaign_id']:
-                    st.session_state.active_campaigns[i]['status'] = 'posted'
-                    st.session_state.active_campaigns[i]['created_content'] = {
-                        'script': script_text,
-                        'duration': duration,
-                        'aspect_ratio': aspect_ratio,
-                        'music': music,
-                        'voiceover': voiceover,
-                        'created_date': datetime.now().strftime("%d %b %Y, %I:%M %p")
-                    }
-                    st.session_state.active_campaigns[i]['current_reach'] = estimated_reach
-                    st.session_state.active_campaigns[i]['current_engagement'] = estimated_engagement
-                    st.session_state.active_campaigns[i]['estimated_earning'] = total_estimated
-            
-            # Add to content created
-            st.session_state.content_created.append({
-                'campaign_id': campaign['campaign_id'],
-                'brand': campaign['brand'],
-                'title': campaign['title'],
-                'content_type': campaign['content_type'],
-                'content': {'script': script_text, 'duration': duration},
-                'created_date': datetime.now().strftime("%d %b %Y, %I:%M %p"),
-                'estimated_earning': total_estimated
-            })
-            
-            add_notification(f"✅ '{campaign['title']}' video submitted!", 'success')
-            st.success("✅ Video submitted! Performance tracking started.")
-            st.balloons()
-            time.sleep(2)
-            st.rerun()
+        add_notification(f"✅ Video content submitted for {campaign['brand']} - {campaign['title']}", 'success')
+        st.success("🎉 Video content submitted successfully!")
+        st.balloons()
+        time.sleep(2)
+        st.rerun()
 
-def create_text_image_content(campaign):
-    """Create text+image content section"""
-    st.subheader("📝 Create Text+Image Content")
+def create_static_content(campaign):
+    """Static post content creation form"""
+    st.subheader("🖼️ Create Static Post")
     
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.markdown("#### 1. Text Content")
-        
-        if st.button("🤖 Generate AI Text"):
-            generated_text = generate_ai_content(campaign['brand'], campaign['title'], st.session_state.language)
-            st.session_state.generated_text = generated_text
-        
-        if 'generated_text' in st.session_state:
-            headline = st.text_input("Headline", st.session_state.generated_text['headline'])
-            body = st.text_area("Body Text", st.session_state.generated_text['body'], height=150)
-            hashtags = st.text_input("Hashtags", st.session_state.generated_text['hashtags'])
-        else:
-            headline = st.text_input("Headline", f"{campaign['brand']} - {campaign['title']}")
-            body = st.text_area("Body Text", "Special offer! Limited time deal...", height=150)
-            hashtags = st.text_input("Hashtags", f"#{campaign['brand'].replace(' ', '')} #Deal #SpecialOffer")
-    
-    with col2:
-        st.markdown("#### 2. Select Image")
+        # Image
+        st.markdown("#### 🖼️ Image")
         
         image_option = st.radio(
-            "Image Option",
-            ["AI Generate", "Upload", "Use Stock Image"]
+            "Choose Image Source",
+            ["🎨 AI Generate", "📤 Upload Image", "📁 Use Template"]
         )
         
-        if image_option == "AI Generate":
-            prompt = st.text_input("AI Prompt", f"{campaign['brand']} {campaign['title']}")
-            if st.button("🖼️ Generate Image"):
-                st.info("AI Image generating... (Demo)")
+        if image_option == "🎨 AI Generate":
+            prompt = st.text_input("Describe the image you want", placeholder="e.g., Product showcase with vibrant colors")
+            if st.button("Generate Image", use_container_width=True):
+                with st.spinner("AI is generating image..."):
+                    time.sleep(2)
+                    st.image("https://via.placeholder.com/600x400/667eea/ffffff?text=AI+Generated+Image", caption="AI Generated Image")
         
-        elif image_option == "Upload":
-            uploaded_file = st.file_uploader("Upload Image", type=['jpg', 'png', 'jpeg'])
+        elif image_option == "📤 Upload Image":
+            uploaded_file = st.file_uploader("Upload your image", type=['jpg', 'png', 'jpeg', 'webp'])
             if uploaded_file:
-                st.image(uploaded_file, caption="Uploaded Image", width=200)
+                st.image(uploaded_file, caption="Uploaded Image")
+        
+        else:  # Template
+            template = st.selectbox("Choose Template", ["Modern", "Classic", "Vibrant", "Minimal"])
+            st.image(f"https://via.placeholder.com/600x400/667eea/ffffff?text={template}+Template", caption=f"{template} Template")
+        
+        # Text Content
+        st.markdown("#### 📝 Text Content")
+        
+        if st.button("🤖 Generate AI Text", use_container_width=True):
+            ai_content = generate_ai_content(campaign['brand'], campaign['title'])
+            st.session_state['ai_text'] = ai_content
+        
+        ai_content = generate_ai_content(campaign['brand'], campaign['title'])
+        default_text = st.session_state.get('ai_text', ai_content)
+        
+        headline = st.text_input("Headline", default_text['headline'])
+        body = st.text_area("Body Text", default_text['body'], height=120)
+        hashtags = st.text_input("Hashtags", default_text['hashtags'])
+        cta = st.text_input("Call to Action", default_text['cta'])
+    
+    with col2:
+        st.markdown("#### 📱 Platform Selection")
+        platforms = st.multiselect(
+            "Select platforms to post on",
+            ["Facebook", "Instagram", "Twitter/X", "LinkedIn", "TikTok", "Pinterest"],
+            default=["Facebook", "Instagram"]
+        )
+        
+        st.markdown("#### ⏰ Post Timing")
+        post_now = st.checkbox("Post immediately after approval", value=True)
+        if not post_now:
+            schedule_time = st.time_input("Schedule time", value=datetime.now().time())
+            schedule_date = st.date_input("Schedule date", value=datetime.now().date())
+    
+    # Preview
+    st.markdown("---")
+    st.subheader("👁️ Post Preview")
+    
+    st.markdown(f"""
+    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; max-width: 500px; margin: 0 auto;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: {get_brand_color(campaign['brand'])}; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white;">
+                {get_brand_logo(campaign['brand'])}
+            </div>
+            <div>
+                <strong>{campaign['brand']}</strong>
+                <div style="font-size: 0.8rem; color: #6b7280;">Sponsored • Just now</div>
+            </div>
+        </div>
+        
+        <h4 style="margin: 10px 0;">{headline}</h4>
+        <p>{body}</p>
+        
+        <div style="background: #f3f4f6; height: 250px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #6b7280; margin: 15px 0;">
+            🖼️ Image Placeholder
+        </div>
+        
+        <p style="color: #3b82f6;">{hashtags}</p>
+        <p style="color: #10b981; font-weight: 600;">{cta}</p>
+        
+        <div style="display: flex; gap: 20px; margin-top: 15px; color: #6b7280; font-size: 0.9rem;">
+            <span>❤️ Like</span>
+            <span>💬 Comment</span>
+            <span>↗️ Share</span>
+        </div>
+        
+        <div style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;">
+            {''.join([f'<span class="badge badge-info">{p}</span>' for p in platforms])}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Performance Estimates
+    st.markdown("---")
+    st.subheader("📊 Estimated Performance")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    estimated_reach = random.randint(campaign['target_reach'] - 300, campaign['target_reach'] + 800)
+    estimated_engagement = random.randint(campaign['min_engagement'] - 50, campaign['min_engagement'] * 2)
+    
+    base_earning = campaign['base_payment'] if estimated_engagement >= campaign['min_engagement'] else 0
+    engagement_earning = estimated_engagement * campaign['per_engagement']
+    total_estimated = base_earning + engagement_earning
+    
+    with col1:
+        st.metric("📊 Estimated Reach", f"{estimated_reach:,}")
+    with col2:
+        st.metric("💬 Estimated Engagement", f"{estimated_engagement:,}")
+    with col3:
+        st.metric("💰 Estimated Earnings", format_currency(total_estimated))
+    
+    if st.button("✅ Submit Post", type="primary", use_container_width=True):
+        # Update campaign
+        for i, c in enumerate(st.session_state.active_campaigns):
+            if c['id'] == campaign['id']:
+                st.session_state.active_campaigns[i]['status'] = 'posted'
+                st.session_state.active_campaigns[i]['created_content'] = {
+                    'type': 'static_post',
+                    'headline': headline,
+                    'body': body,
+                    'hashtags': hashtags,
+                    'cta': cta,
+                    'platforms': platforms,
+                    'submitted_at': datetime.now().strftime("%d %b %Y, %I:%M %p")
+                }
+                st.session_state.active_campaigns[i]['current_reach'] = estimated_reach
+                st.session_state.active_campaigns[i]['current_engagement'] = estimated_engagement
+                st.session_state.active_campaigns[i]['estimated_earning'] = total_estimated
+        
+        add_notification(f"✅ Post submitted for {campaign['brand']} - {campaign['title']}", 'success')
+        st.success("🎉 Post submitted successfully!")
+        st.balloons()
+        time.sleep(2)
+        st.rerun()
+
+def create_text_image_content(campaign):
+    """Text + Image content creation form"""
+    st.subheader("📝 Create Text + Image Content")
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        # Text Content
+        st.markdown("#### 📝 Text Content")
+        
+        if st.button("🤖 Generate AI Text", use_container_width=True):
+            ai_content = generate_ai_content(campaign['brand'], campaign['title'])
+            st.session_state['ai_text'] = ai_content
+        
+        ai_content = generate_ai_content(campaign['brand'], campaign['title'])
+        default_text = st.session_state.get('ai_text', ai_content)
+        
+        headline = st.text_input("Headline", default_text['headline'])
+        body = st.text_area("Body Text", default_text['body'], height=120)
+        hashtags = st.text_input("Hashtags", default_text['hashtags'])
+        
+        # Image
+        st.markdown("#### 🖼️ Image")
+        image_option = st.radio(
+            "Choose Image Source",
+            ["🎨 AI Generate", "📤 Upload Image", "📁 Stock Images"],
+            horizontal=True
+        )
+        
+        if image_option == "🎨 AI Generate":
+            prompt = st.text_input("Image description")
+            if st.button("Generate", use_container_width=True):
+                st.image("https://via.placeholder.com/400x300/667eea/ffffff?text=AI+Image")
+        
+        elif image_option == "📤 Upload Image":
+            uploaded = st.file_uploader("Upload image", type=['jpg', 'png', 'jpeg'])
+            if uploaded:
+                st.image(uploaded, width=300)
         
         else:
-            st.info("Select from stock image library")
+            stock_categories = ["Nature", "Tech", "Business", "Lifestyle"]
+            selected = st.selectbox("Stock Category", stock_categories)
+            st.image(f"https://via.placeholder.com/400x300/667eea/ffffff?text={selected}+Stock", width=300)
+    
+    with col2:
+        st.markdown("#### 📱 Platform & Settings")
+        platforms = st.multiselect(
+            "Platforms",
+            ["Facebook", "Instagram", "Twitter/X", "LinkedIn"],
+            default=["Facebook", "Instagram"]
+        )
         
-        # Preview and Submit
-        st.markdown("---")
+        engagement_goal = st.number_input(
+            "Engagement Goal",
+            min_value=100,
+            max_value=1000,
+            value=campaign['min_engagement']
+        )
+        
+        st.markdown("#### 🎯 Content Tips")
+        st.info(f"""
+        💡 Tips for {campaign['brand']}:
+        • Use high-quality visuals
+        • Keep text concise and engaging
+        • Include relevant hashtags
+        • Add a clear call to action
+        • Tag the brand if allowed
+        """)
+    
+    # Preview
+    st.markdown("---")
+    st.subheader("👁️ Preview")
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        st.markdown(f"""
+        <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px;">
+            <h4>{headline}</h4>
+            <p>{body}</p>
+            <div style="background: #f3f4f6; height: 200px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #6b7280; margin: 10px 0;">
+                🖼️ Image
+            </div>
+            <p style="color: #3b82f6;">{hashtags}</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        # Estimated Performance
         st.markdown("#### 📊 Estimated Performance")
         
-        estimated_reach = random.randint(200, 1000)
-        estimated_engagement = random.randint(40, 300)
+        estimated_reach = random.randint(campaign['target_reach'] - 200, campaign['target_reach'] + 500)
+        estimated_engagement = random.randint(campaign['min_engagement'] - 30, campaign['min_engagement'] * 2)
         
-        st.metric("Estimated Reach", f"{estimated_reach}")
-        st.metric("Estimated Engagement", f"{estimated_engagement}")
-        
-        # Calculate estimated earning
         base_earning = campaign['base_payment'] if estimated_engagement >= campaign['min_engagement'] else 0
         engagement_earning = estimated_engagement * campaign['per_engagement']
         total_estimated = base_earning + engagement_earning
         
-        st.metric("Estimated Earning", f"{format_currency(total_estimated)}")
+        st.metric("Estimated Reach", f"{estimated_reach:,}")
+        st.metric("Estimated Engagement", f"{estimated_engagement:,}")
+        st.metric("Estimated Earnings", format_currency(total_estimated))
         
         if st.button("✅ Submit Content", type="primary", use_container_width=True):
             # Update campaign
             for i, c in enumerate(st.session_state.active_campaigns):
-                if c['campaign_id'] == campaign['campaign_id']:
+                if c['id'] == campaign['id']:
                     st.session_state.active_campaigns[i]['status'] = 'posted'
                     st.session_state.active_campaigns[i]['created_content'] = {
+                        'type': 'text_image',
                         'headline': headline,
                         'body': body,
                         'hashtags': hashtags,
-                        'image_option': image_option,
-                        'created_date': datetime.now().strftime("%d %b %Y, %I:%M %p")
+                        'platforms': platforms,
+                        'submitted_at': datetime.now().strftime("%d %b %Y, %I:%M %p")
                     }
                     st.session_state.active_campaigns[i]['current_reach'] = estimated_reach
                     st.session_state.active_campaigns[i]['current_engagement'] = estimated_engagement
                     st.session_state.active_campaigns[i]['estimated_earning'] = total_estimated
             
-            # Add to content created
-            st.session_state.content_created.append({
-                'campaign_id': campaign['campaign_id'],
-                'brand': campaign['brand'],
-                'title': campaign['title'],
-                'content_type': campaign['content_type'],
-                'content': {'headline': headline, 'body': body, 'hashtags': hashtags},
-                'created_date': datetime.now().strftime("%d %b %Y, %I:%M %p"),
-                'estimated_earning': total_estimated
-            })
-            
-            add_notification(f"✅ '{campaign['title']}' content submitted!", 'success')
-            st.success("✅ Content submitted! Performance tracking started.")
+            add_notification(f"✅ Content submitted for {campaign['brand']} - {campaign['title']}", 'success')
+            st.success("🎉 Content submitted successfully!")
             st.balloons()
             time.sleep(2)
             st.rerun()
 
-def show_performance():
-    """Show performance tracking"""
-    st.title(f"📊 {t('performance_tracking')}")
+# ==================== ANALYTICS ====================
+def show_analytics():
+    """Analytics Dashboard"""
     
-    # Filter options
-    col1, col2 = st.columns(2)
-    with col1:
-        time_filter = st.selectbox(
-            f"⏰ {t('time_filter')}", 
-            [t('all_time'), t('last_7_days'), t('last_30_days'), t('this_month')]
-        )
-    with col2:
-        campaign_filter = st.selectbox(
-            f"🎯 {t('campaign_filter')}",
-            [t('all_campaigns')] + [c['title'] for c in st.session_state.active_campaigns + st.session_state.completed_campaigns]
-        )
+    st.title("📊 Analytics Dashboard")
+    st.caption("Track your performance and earnings across all campaigns")
     
-    st.markdown("---")
-    
-    # Performance Metrics
-    st.subheader(f"📈 {t('performance_metrics')}")
-    
+    # Summary stats
     col1, col2, col3, col4 = st.columns(4)
     
+    total_earned = sum(c.get('estimated_earning', 0) for c in st.session_state.completed_campaigns)
+    total_active = len([c for c in st.session_state.active_campaigns if c.get('status') != 'completed'])
+    total_completed = len(st.session_state.completed_campaigns)
     total_reach = sum(c.get('current_reach', 0) for c in st.session_state.active_campaigns + st.session_state.completed_campaigns)
-    total_engagement = sum(c.get('current_engagement', 0) for c in st.session_state.active_campaigns + st.session_state.completed_campaigns)
-    total_earning = sum(c.get('estimated_earning', 0) for c in st.session_state.completed_campaigns) + \
-                   sum(c.get('estimated_earning', 0) for c in st.session_state.active_campaigns if c['status'] == 'posted')
-    campaign_count = len(st.session_state.active_campaigns) + len(st.session_state.completed_campaigns)
     
     with col1:
-        st.metric(t('total_reach'), f"{total_reach}")
+        st.metric("💰 Total Earned", format_currency(total_earned), delta="+12%")
     with col2:
-        st.metric(t('total_engagement'), f"{total_engagement}")
+        st.metric("🎯 Active Campaigns", total_active)
     with col3:
-        st.metric(t('total_earnings'), f"{format_currency(total_earning)}")
+        st.metric("✅ Completed", total_completed)
     with col4:
-        st.metric(t('total_campaigns'), f"{campaign_count}")
+        st.metric("📊 Total Reach", f"{total_reach:,}")
     
-    st.markdown("---")
+    st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
     
-    # Detailed Campaign Performance
-    st.subheader(f"🎯 {t('campaign_performance')}")
+    # Charts
+    col1, col2 = st.columns(2)
     
-    if not st.session_state.active_campaigns and not st.session_state.completed_campaigns:
-        st.info(f"📭 {t('no_active_campaigns')}")
-    else:
-        # Create performance table
-        performance_data = []
+    with col1:
+        st.subheader("📈 Earnings Trend")
         
-        for campaign in st.session_state.active_campaigns + st.session_state.completed_campaigns:
-            if campaign_filter != t('all_campaigns') and campaign['title'] != campaign_filter:
-                continue
+        # Generate sample earnings data
+        if st.session_state.completed_campaigns:
+            dates = [datetime.now() - timedelta(days=i) for i in range(30, 0, -1)]
+            earnings = [random.randint(0, 200) for _ in range(30)]
             
-            performance_data.append({
-                t('brand'): campaign['brand'],
-                t('campaign'): campaign['title'],
-                t('status'): 'Completed' if campaign in st.session_state.completed_campaigns else 'Active',
-                t('reach'): campaign.get('current_reach', 0),
-                t('engagement'): campaign.get('current_engagement', 0),
-                t('estimated_earning'): format_currency(campaign.get('estimated_earning', 0)),
-                t('start_date'): campaign.get('accepted_date', 'N/A')
+            chart_data = pd.DataFrame({
+                'Date': dates,
+                'Earnings': earnings
             })
-        
-        if performance_data:
-            st.dataframe(pd.DataFrame(performance_data), use_container_width=True)
+            st.line_chart(chart_data, x='Date', y='Earnings')
         else:
-            st.info("No campaigns match the selected filter.")
+            st.info("Complete campaigns to see earnings trends")
+    
+    with col2:
+        st.subheader("🎯 Campaign Performance")
+        
+        if st.session_state.completed_campaigns:
+            campaign_data = pd.DataFrame([
+                {
+                    'Campaign': c['title'][:20],
+                    'Reach': c.get('current_reach', 0),
+                    'Engagement': c.get('current_engagement', 0)
+                }
+                for c in st.session_state.completed_campaigns[-5:]
+            ])
+            st.bar_chart(campaign_data.set_index('Campaign'))
+        else:
+            st.info("Complete campaigns to see performance data")
+    
+    st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+    
+    # Campaign List
+    st.subheader("📋 All Campaigns")
+    
+    all_campaigns = st.session_state.active_campaigns + st.session_state.completed_campaigns
+    
+    if all_campaigns:
+        df = pd.DataFrame([
+            {
+                'Brand': c['brand'],
+                'Campaign': c['title'],
+                'Status': '✅ Completed' if c in st.session_state.completed_campaigns else '🔄 Active',
+                'Earnings': format_currency(c.get('estimated_earning', 0)),
+                'Reach': c.get('current_reach', 0),
+                'Engagement': c.get('current_engagement', 0)
+            }
+            for c in all_campaigns
+        ])
+        st.dataframe(df, use_container_width=True)
+    else:
+        st.info("No campaigns yet. Start by applying to campaigns in the marketplace!")
 
+# ==================== NOTIFICATIONS ====================
 def show_notifications():
-    """Show notifications panel"""
+    """Display notifications in sidebar"""
     st.sidebar.markdown("### 🔔 Notifications")
     
     if not st.session_state.notifications:
         st.sidebar.info("No notifications")
     else:
-        for notif in reversed(st.session_state.notifications[-5:]):
-            color = "#10b981" if notif['type'] == 'success' else "#3b82f6"
+        for notif in st.session_state.notifications[:5]:
+            color = "#10b981" if notif['type'] == 'success' else "#3b82f6" if notif['type'] == 'info' else "#f59e0b"
             st.sidebar.markdown(f"""
-            <div style="
-                background: {color}10;
-                border-left: 3px solid {color};
-                padding: 10px;
-                margin: 5px 0;
-                border-radius: 5px;
-                font-size: 0.9rem;
-            ">
-                <div style="display: flex; justify-content: space-between;">
-                    <span>{notif['message']}</span>
-                    <small>{notif['time']}</small>
-                </div>
+            <div class="notification-item" style="border-left-color: {color};">
+                <span>{notif['message']}</span>
+                <span class="time">{notif['time']}</span>
             </div>
             """, unsafe_allow_html=True)
+        
+        if len(st.session_state.notifications) > 5:
+            st.sidebar.caption(f"+ {len(st.session_state.notifications) - 5} more")
     
-    if st.sidebar.button("Clear Notifications"):
+    if st.sidebar.button("Clear All", use_container_width=True):
         st.session_state.notifications = []
         st.rerun()
 
+# ==================== SIDEBAR ====================
+def render_sidebar():
+    """Render sidebar with settings and navigation"""
+    
+    with st.sidebar:
+        # Logo / Header
+        st.markdown("""
+        <div style="text-align: center; padding: 10px 0;">
+            <div style="font-size: 3rem;">🌍</div>
+            <h2 style="margin: 5px 0; color: #667eea;">CollabNet</h2>
+            <p style="font-size: 0.85rem; color: #6b7280;">Global Creator Platform</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+        
+        # Navigation
+        st.markdown("### 🧭 Navigation")
+        
+        nav_options = {
+            "📊 Dashboard": "dashboard",
+            "🏢 Marketplace": "marketplace",
+            "🎨 Create Content": "create",
+            "📊 Analytics": "analytics"
+        }
+        
+        for label, page in nav_options.items():
+            if st.button(label, key=f"nav_{page}", use_container_width=True, 
+                        type="primary" if st.session_state.page == page else "secondary"):
+                st.session_state.page = page
+                st.rerun()
+        
+        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+        
+        # Settings
+        st.markdown("### 🌍 Settings")
+        
+        # Language
+        lang_options = [f"{LANGUAGES[code]['flag']} {LANGUAGES[code]['name']}" for code in LANGUAGES]
+        lang_codes = list(LANGUAGES.keys())
+        current_lang_index = lang_codes.index(st.session_state.language) if st.session_state.language in lang_codes else 0
+        
+        selected_lang = st.selectbox(
+            "Language",
+            lang_options,
+            index=current_lang_index
+        )
+        selected_code = lang_codes[lang_options.index(selected_lang)]
+        if selected_code != st.session_state.language:
+            st.session_state.language = selected_code
+            st.rerun()
+        
+        # Currency
+        currency_options = [f"{CURRENCIES[code]['emoji']} {CURRENCIES[code]['name']} ({CURRENCIES[code]['symbol']})" 
+                           for code in CURRENCIES]
+        currency_codes = list(CURRENCIES.keys())
+        current_currency_index = currency_codes.index(st.session_state.currency) if st.session_state.currency in currency_codes else 0
+        
+        selected_currency = st.selectbox(
+            "Currency",
+            currency_options,
+            index=current_currency_index
+        )
+        selected_currency_code = currency_codes[currency_options.index(selected_currency)]
+        if selected_currency_code != st.session_state.currency:
+            st.session_state.currency = selected_currency_code
+            st.rerun()
+        
+        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+        
+        # User Info
+        st.markdown("### 👤 Profile")
+        st.markdown(f"""
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div><strong>{st.session_state.user_name}</strong></div>
+                    <div style="font-size: 0.85rem; color: #6b7280;">⭐ {st.session_state.user_level}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 1.2rem; font-weight: 600; color: #10b981;">
+                        {format_currency(st.session_state.balance)}
+                    </div>
+                    <div style="font-size: 0.8rem; color: #6b7280;">Balance</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("💰 Withdraw", use_container_width=True):
+            if st.session_state.balance > 0:
+                st.session_state.balance = 0
+                add_notification(f"✅ Withdrew {format_currency(st.session_state.balance)}", 'success')
+                st.success("Withdrawal successful!")
+                st.rerun()
+            else:
+                st.warning("No balance to withdraw")
+        
+        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+        
+        # Notifications
+        show_notifications()
+        
+        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+        
+        # Footer
+        st.markdown("""
+        <div style="text-align: center; font-size: 0.8rem; color: #6b7280;">
+            🌍 CollabNet v2.0<br>
+            Connect • Create • Earn
+        </div>
+        """, unsafe_allow_html=True)
+
+# ==================== MAIN APP ====================
 def main():
-    # Initialize page state
-    if 'page' not in st.session_state:
-        st.session_state.page = "dashboard"
+    """Main application entry point"""
     
-    # Sidebar Navigation
-    st.sidebar.image("https://via.placeholder.com/150x50/667eea/ffffff?text=CollabNet", use_column_width=True)
+    # Render sidebar
+    render_sidebar()
     
-    st.sidebar.markdown("---")
-    
-    # Language and Currency Settings
-    st.sidebar.markdown("### 🌍 Settings")
-    
-    # Language selector
-    lang_options = {f"{LANGUAGES[code]['flag']} {LANGUAGES[code]['name']}": code for code in LANGUAGES}
-    selected_lang = st.sidebar.selectbox(
-        "Language",
-        list(lang_options.keys()),
-        index=list(lang_options.values()).index(st.session_state.language) if st.session_state.language in lang_options.values() else 0
-    )
-    st.session_state.language = lang_options[selected_lang]
-    
-    # Currency selector
-    currency_options = {f"{CURRENCIES[code]['symbol']} {CURRENCIES[code]['name']}": code for code in CURRENCIES}
-    selected_currency = st.sidebar.selectbox(
-        "Currency",
-        list(currency_options.keys()),
-        index=list(currency_options.values()).index(st.session_state.currency) if st.session_state.currency in currency_options.values() else 0
-    )
-    st.session_state.currency = currency_options[selected_currency]
-    
-    st.sidebar.markdown("---")
-    st.sidebar.title("📱 Navigation")
-    
-    # Navigation buttons
-    if st.sidebar.button(f"📊 {t('dashboard')}", use_container_width=True):
-        st.session_state.page = "dashboard"
-        st.rerun()
-    
-    if st.sidebar.button(f"🏢 {t('browse_brands')}", use_container_width=True):
-        st.session_state.page = "marketplace"
-        st.rerun()
-    
-    if st.sidebar.button(f"🎨 {t('create_content')}", use_container_width=True):
-        st.session_state.page = "create_content"
-        st.rerun()
-    
-    if st.sidebar.button(f"📊 {t('view_performance')}", use_container_width=True):
-        st.session_state.page = "performance"
-        st.rerun()
-    
-    st.sidebar.markdown("---")
-    
-    # Show notifications in sidebar
-    show_notifications()
-    
-    st.sidebar.markdown("---")
-    
-    # User info
-    st.sidebar.markdown("### 👤 Your Info")
-    st.sidebar.markdown(f"**{t('balance')}:** {format_currency(st.session_state.balance)}")
-    st.sidebar.markdown(f"**{t('active_campaigns')}:** {len([c for c in st.session_state.active_campaigns if c['status'] != 'completed'])}")
-    
-    if st.sidebar.button("💰 Withdraw"):
-        if st.session_state.balance > 0:
-            st.sidebar.success(f"{format_currency(st.session_state.balance)} withdrawn successfully!")
-            st.session_state.balance = 0
-            add_notification("✅ Withdrawal successful!", 'success')
-        else:
-            st.sidebar.warning("Insufficient balance for withdrawal")
-    
-    st.sidebar.markdown("---")
-    
-    # Page selection
+    # Main content area
     if st.session_state.page == "dashboard":
         show_dashboard()
     elif st.session_state.page == "marketplace":
         show_marketplace()
-    elif st.session_state.page == "create_content":
-        create_content()
-    elif st.session_state.page == "performance":
-        show_performance()
+    elif st.session_state.page == "create":
+        show_content_creation()
+    elif st.session_state.page == "analytics":
+        show_analytics()
 
 if __name__ == "__main__":
     main()
